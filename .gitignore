@@ -1,0 +1,10 @@
+**/__pycache__/
+*.py[cod]
+*.db
+.env
+
+config.yaml
+results.json
+
+dev/
+chroma_db/

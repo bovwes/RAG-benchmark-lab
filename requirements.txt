@@ -1,0 +1,10 @@
+anthropic
+pypdf
+sentence-transformers
+chromadb
+openai
+python-dotenv
+rank-bm25
+questionary
+pyyaml
+rouge-score

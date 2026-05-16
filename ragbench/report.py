@@ -1,0 +1,85 @@
+import csv
+import json
+
+from .core.runner import BenchmarkResult
+
+_COLS = [
+    ("recall@k",    "recall_at_k"),
+    ("prec@k",      "precision_at_k"),
+    ("mrr",         "mrr"),
+    ("tok-f1",      "token_f1"),
+    ("rouge-l",     "rouge_l"),
+    ("exact",       "exact_match"),
+    ("faithful",    "faithfulness"),
+    ("relevance",   "relevance"),
+    ("ret_ms",      "retrieve_ms"),
+    ("rerank_ms",   "rerank_ms"),
+    ("gen_ms",      "generate_ms"),
+    ("total_ms",    "total_ms"),
+]
+
+
+def print_table(results: list[BenchmarkResult]) -> None:
+    col_w  = 11
+    name_w = max((len(r.config_name) for r in results), default=10) + 2
+
+    headers = ["config"] + [label for label, _ in _COLS]
+    widths  = [name_w] + [col_w] * len(_COLS)
+    sep     = "-" * sum(widths)
+
+    print(f"\n{'Benchmark Results':^{sum(widths)}}")
+    print(sep)
+    print("".join(h.ljust(w) for h, w in zip(headers, widths)))
+    print(sep)
+
+    for r in results:
+        summary = r.summary()
+        vals = [r.config_name] + [f"{summary.get(key, 0.0):.3f}" for _, key in _COLS]
+        print("".join(str(v).ljust(w) for v, w in zip(vals, widths)))
+
+    print(sep)
+
+def to_json(results: list[BenchmarkResult], path: str) -> None:
+    if not path.endswith(".json"):
+        raise ValueError(f"Export file must be .json, got: {path!r}")
+
+    data = [
+        {
+            "config": r.config_name,
+            "metrics": {k: round(v, 4) for k, v in r.summary().items()},
+            "per_question": [
+                {
+                    "question": ir.item.question,
+                    "expected_answer": ir.item.expected_answer,
+                    "generated_answer": ir.pipeline_result.answer,
+                    "retrieval": {
+                        "recall_at_k":    round(ir.retrieval_metrics.recall_at_k, 4),
+                        "precision_at_k": round(ir.retrieval_metrics.precision_at_k, 4),
+                        "mrr":            round(ir.retrieval_metrics.mrr, 4),
+                    },
+                    "answer": {
+                        "token_f1":    round(ir.answer_metrics.token_f1, 4),
+                        "rouge_l":     round(ir.answer_metrics.rouge_l, 4),
+                        "exact_match": round(ir.answer_metrics.exact_match, 4),
+                    },
+                    "judge": {
+                        "faithfulness":     round(ir.judge_metrics.faithfulness, 4),
+                        "relevance":        round(ir.judge_metrics.relevance, 4),
+                    },
+                    "latency_ms": {
+                        "retrieve":  round(ir.pipeline_result.retrieve_latency_ms, 2),
+                        "rerank":    round(ir.pipeline_result.rerank_latency_ms, 2),
+                        "generate":  round(ir.pipeline_result.generate_latency_ms, 2),
+                        "total":     round(ir.pipeline_result.total_latency_ms, 2),
+                    },
+                }
+                for ir in r.item_results
+            ],
+        }
+        for r in results
+    ]
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+
+    print(f"Saved → {path}")

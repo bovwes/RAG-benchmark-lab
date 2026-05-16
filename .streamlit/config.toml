@@ -1,0 +1,22 @@
+[theme]
+base = "dark"
+
+# General color setup
+textColor = "#e2e8f0"
+primaryColor = "#415ac9"
+backgroundColor = "#141922"
+secondaryBackgroundColor = "#20273c"
+
+# Widgets
+showWidgetBorder = true
+borderColor = "#263346"
+
+# Base text
+font = "'Noto Sans':https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300..700&display=swap"
+baseFontWeight = 300
+baseFontSize = 14
+
+# Heading text
+headingFont = "Noto Sans"
+headingFontWeights = 500
+headingFontSizes = ["2.5rem", "1.5rem", "1rem"]
