@@ -4,12 +4,16 @@ A framework for benchmarking RAG (Retrieval-Augmented Generation) pipeline confi
 
 ## Screenshots
 
-<img src="./images/sh_dashboard.png" alt="Screenshot Dashboard" width="100%"/>
 <div align="center">
 <table>
 <tr>
-<td style="width:33%"><img src="./images/sh_latency_graph.png" alt="Screenshot 2" width="100%"/></td>
-<td style="width:67%"><img src="./images/sh_answer_details.png" alt="Screenshot 3" width="100%"/></td>
+<td><img src="./images/sh_dashboard.png" alt="Screenshot Dashboard" width="100%"/></td>
+</tr>
+</table>
+<table>
+<tr>
+<td style="width:32%"><img src="./images/sh_latency_graph.png" alt="Screenshot 2" width="100%"/></td>
+<td style="width:68%"><img src="./images/sh_answer_details.png" alt="Screenshot 3" width="100%"/></td>
 </tr>
 </table>
 </div>
