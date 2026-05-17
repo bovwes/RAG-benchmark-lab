@@ -2,6 +2,7 @@
 *.py[cod]
 *.db
 .env
+.DS_Store
 
 config.yaml
 results.json
