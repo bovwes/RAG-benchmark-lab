@@ -1,4 +1,5 @@
 import json
+import sys
 import pandas as pd
 import streamlit as st
 import altair as alt
@@ -17,7 +18,8 @@ st.set_page_config(
 ""
 ""
 
-RESULTS_FILE = "results.json"
+DEFAULT_RESULTS_FILE = "results.json"
+_cli_arg = sys.argv[1] if len(sys.argv) > 1 else None
 
 METRIC_LABELS = {
     "token_f1": "Token F1",
@@ -86,7 +88,7 @@ def render_legend(configs: list[str], scale: alt.Scale) -> None:
             alt.Color(
                 "config:N",
                 scale=scale,
-                legend=alt.Legend(orient="top", direction="horizontal", title=None),
+                legend=alt.Legend(orient="bottom", direction="horizontal", title=None),
             ),
         )
         .properties(height=LEGEND_HEIGHT)
@@ -247,11 +249,15 @@ def render_questions_section(results: list[dict], configs: list[str]) -> None:
 # RENDER DASHBOARD
 #########################################
 
+# File selector
+with st.sidebar:
+    results_file = st.text_input("Benchmark file", value=_cli_arg)
+
 # Load data
 try:
-    results = load_results(RESULTS_FILE)
+    results = load_results(results_file)
 except FileNotFoundError:
-    st.error(f"`{RESULTS_FILE}` not found. Run the benchmark first.")
+    st.error(f"`{results_file}` not found. Run the benchmark first.")
     st.stop()
 
 configs = [r["config"] for r in results]
@@ -285,15 +291,13 @@ with right_cell:
         width="content",
     )
 
-""
-
 # Charts
 scale = color_scale_for(selected_configs)
 
 render_legend(selected_configs, scale)
 render_metrics_grid(filtered_df, judge_df, selected_configs, scale)
 
-lat_col, qa_col = st.columns(2)
+lat_col, qa_col = st.columns([1, 2])
 
 latency_phases = [p for p in LATENCY_PHASES if p in filtered_df.columns]
 if latency_phases:

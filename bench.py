@@ -2,7 +2,6 @@ import argparse
 import os
 
 import chromadb
-import yaml
 from dotenv import load_dotenv
 from openai import OpenAI
 from sentence_transformers import SentenceTransformer
@@ -18,20 +17,13 @@ load_dotenv()
 # Helper functions
 
 def _get_llm_client() -> tuple[OpenAI, str]:
-    api_key = os.getenv("LLM_API_KEY", "none")
-
-    config = {}
-    if os.path.exists("config.yaml"):
-        with open("config.yaml") as f:
-            config = yaml.safe_load(f) or {}
-
-    llm = config.get("llm", {})
-    base_url = llm.get("base_url")
-    model = llm.get("model")
+    api_key  = os.getenv("LLM_API_KEY", "none")
+    base_url = os.getenv("LLM_BASE_URL")
+    model    = os.getenv("LLM_MODEL_NAME")
 
     if not base_url or not model:
         raise SystemExit(
-            "llm.base_url and llm.model must be set in config.yaml (run setup.py to configure)."
+            "LLM_BASE_URL and LLM_MODEL_NAME must be set in your .env file."
         )
     return OpenAI(base_url=base_url, api_key=api_key), model
 
@@ -41,8 +33,8 @@ def main():
     parser = argparse.ArgumentParser(description="Benchmark RAG pipeline configurations")
     parser.add_argument("--eval-dataset",   required=True,              help="Path to evaluation dataset (.json or .csv)")
     parser.add_argument("--collection",     default=COLLECTION_NAME,    help=f"ChromaDB collection name (default: {COLLECTION_NAME})")
+    parser.add_argument("--export",         default="results.json",     help="Export results to this file (.json)")
     parser.add_argument("--judge",          action="store_true",        help="Enable LLM-as-judge scoring")
-    parser.add_argument("--export",         default="",                 help="Export results to this file (.json)")
     parser.add_argument("--top-k",          type=int, default=10,       help="Chunks to retrieve before reranking (default 10)")
     parser.add_argument("--rerank-k",       type=int, default=5,        help="Chunks to pass to the generator (default 5)")
     args = parser.parse_args()
@@ -123,6 +115,7 @@ def main():
 
     if args.export:
         rb.to_json(results, args.export)
+        print(f"View the dashboard by running: streamlit run dashboard.py {args.export}")
 
 if __name__ == "__main__":
     main()
