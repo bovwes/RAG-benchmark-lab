@@ -8,3 +8,5 @@ rank-bm25
 questionary
 pyyaml
 rouge-score
+fastapi
+uvicorn[standard]

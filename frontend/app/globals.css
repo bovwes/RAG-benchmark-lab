@@ -1,0 +1,52 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-salmon: #e76f51;
+  --color-mandarin: #f4a261;
+  --color-sunflower: #e9c46a;
+  --color-ocean: #2a9d8f;
+  --color-diamond: #2a9d8f;
+  --color-sky-300: #aecbeb;
+  --color-sky-400: #7daada;
+  --color-sky-500: #5a8cc2;
+
+  --breakpoint-3xl: 128rem;
+}
+
+body {
+  font-family: var(--font-jetbrains-mono), monospace;
+}
+
+.background-pattern {
+  background-color: #f5f5f5;
+  opacity: 0.2;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 19px,
+      #b6b6b6 19px,
+      #b6b6b6 20px,
+      transparent 20px,
+      transparent 39px,
+      #b6b6b6 39px,
+      #b6b6b6 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 19px,
+      #b6b6b6 19px,
+      #b6b6b6 20px,
+      transparent 20px,
+      transparent 39px,
+      #b6b6b6 39px,
+      #b6b6b6 40px
+    ),
+    radial-gradient(circle at 20px 20px, #b6b6b6 1.6px, transparent 2.1px),
+    radial-gradient(circle at 0px 0px, #b6b6b6 1.2px, transparent 1.7px),
+    radial-gradient(circle at 40px 0px, #b6b6b6 1.2px, transparent 1.7px),
+    radial-gradient(circle at 0px 40px, #b6b6b6 1.2px, transparent 1.7px),
+    radial-gradient(circle at 40px 40px, #b6b6b6 1.2px, transparent 1.7px);
+  background-size: 40px 40px;
+}

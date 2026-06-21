@@ -1,31 +1,37 @@
 # RAG Benchmark Lab
 
-A framework for benchmarking RAG (Retrieval-Augmented Generation) pipeline configurations side by side. You can swap retrievers, rerankers, and LLM-generators, and compare their performance.
+A tool for benchmarking RAG (Retrieval-Augmented Generation) pipeline configurations side by side. You can swap retrievers, rerankers, and LLM-generators, and compare their performance.
 
 ## Screenshots
 
 <div align="center">
 <table>
 <tr>
-<td><img src="./images/sh_dashboard.png" alt="Screenshot Dashboard" width="100%"/></td>
+<td><img src="./images/sh_benchmark_results.png" alt="Screenshot Benchmark Results" width="100%"/></td>
 </tr>
 </table>
 <table>
 <tr>
-<td style="width:32%"><img src="./images/sh_latency_graph.png" alt="Screenshot 2" width="100%"/></td>
-<td style="width:68%"><img src="./images/sh_answer_details.png" alt="Screenshot 3" width="100%"/></td>
+<td style="width:50%"><img src="./images/sh_components_page.png" alt="Screenshot Components Page" width="100%"/></td>
+<td style="width:50%"><img src="./images/sh_playground_page.png" alt="Screenshot Playground Page" width="100%"/></td>
+</tr></table>
+
+<table>
+<tr>
+<td><img src="./images/sh_answer_breakdown.png" alt="Screenshot Answer Breakdown" width="100%"/></td>
 </tr>
 </table>
+
 </div>
 
 ## Setup
 
 ### 1. Install dependencies
 
-You can install the required dependencies from `requirements.txt`:
+You can install the required dependencies from `requirements.txt` using `npm`:
 
 ```bash
-pip install -r requirements.txt
+npm run setup
 ```
 
 ### 2. Configure environment variables
@@ -33,7 +39,7 @@ pip install -r requirements.txt
 Copy the template from `env.example` and fill in the required fields:
 
 ```env
-# LLM information (For using OpenAI API: https://developers.openai.com/api/docs)
+# LLM information (any OpenAI-compatible API)
 LLM_API_KEY=your_api_key
 LLM_BASE_URL=https://api.mistral.ai/v1
 LLM_MODEL_NAME=mistral-medium-3.5
@@ -42,63 +48,76 @@ LLM_MODEL_NAME=mistral-medium-3.5
 HF_TOKEN=your_hf_access_token
 ```
 
-Any LLM API is supported that follows the OpenAI SDK format.
+Any LLM API that follows the OpenAI SDK format is supported.
+
+### 3. Start the app
+
+Start the backend and frontend servers individually:
+
+```bash
+npm run backend # Start FastAPI backend (http://localhost:8000)
+npm run frontend # Start Next.js frontend (http://localhost:3000)
+```
+
+Then open the app on [http://localhost:3000](http://localhost:3000).
 
 ## Usage
 
-### 1. Populate ChromaDB vector database
+The app is organized into five sections:
 
-### 2. Set up RAG configuration(s)
+### <img src="./frontend/public/images/files.svg" width="32" height="32"> Collections
 
-Define your RAG components (retrievers, generators etc.) and combine them into `PipelineConfig` objects. The benchmark will run for each configuration.
+Lists all your datasets in ChromaDB. Click **New collection** to vectorize and ingest a new dataset.
 
-```python
-# Components
-hybrid_ret  = rb.HybridRetriever()
-reranker    = rb.CrossEncoderReranker()
-generator   = rb.OpenAIGenerator(client, model)
-judge       = rb.LLMJudge(client, model)
+### <img src="./frontend/public/images/star.svg" width="32" height="32"> Evaluation sets
 
-# Configs
-configs = [
-    rb.PipelineConfig(
-        name="Hybrid + Cross Encoder",
-        retriever=hybrid_ret,
-        reranker=reranker,
-        generator=generator,
-        top_k_retrieve=args.top_k,
-        top_k_rerank=args.rerank_k,
-    )
-    # Add more configurations
-  ]
+Browse the `.json` evaluation files stored in the `evaluation/` folder. Each file is a list of question/answer pairs used as ground truth when running benchmarks. For example:
 
-# Run
-runner  = rb.BenchmarkRunner(dataset, judge=judge)
+```json
+[
+  { "question": "What is X?",
+    "answer": "X is ...",
+    "contexts": [
+        "X has many ..."
+        "X is know for ..."
+      ]
+    },
+  ...
+]
 ```
 
-### 3. Run benchmark
+### <img src="./frontend/public/images/blocks.svg" width="20" height="20"> Components
 
-```bash
-python bench.py --eval-dataset eval.json --export results.json
+A read-only registry of all available pipeline components, auto-discovered from the `backend/components/` subpackages. Components are grouped by category:
+
+| Category   | Default components                          |
+| ---------- | ------------------------------------------- |
+| Retrievers | BM25, Chroma (dense), Hybrid (BM25 + dense) |
+| Rerankers  | Cross-Encoder, No-rerank (passthrough)      |
+| Generators | OpenAI-SDK                                  |
+
+Adding a new component class to the appropriate subpackage (e.g. `backend/components/retrievers/`) makes it appear here automatically, and allows you to use it in the playground or for benchmarking.
+
+### <img src="./frontend/public/images/chat.svg" width="32" height="32"> Playground
+
+An interactive query runner. First select a collection from your vector store, retriever, reranker, and generator. Then query your RAG-pipeline to see its generated answer along with the retrieved chunks, latency, and a 2D PCA scatter plot of the query against its semantic neighbourhood in the vector store.
+
+### <img src="./frontend/public/images/diamond.svg" width="32" height="32"> Benchmarks
+
+Run and review RAG benchmarks for multiple configurations at once. Pick an evaluation dataset from the `evaluation/` folder, choose a collection, add one or more pipeline configurations, and optionally enable LLM-as-judge scoring. Results are saved automatically to the `benchmarks/` folder.
+
+## Architecture
+
 ```
-
-Add `--judge` to enable LLM-as-judge evaluation. See below for a full list of arguments:
-
-**Benchmark arguments**
-
-| Flag             | Default        | Description                                    |
-| ---------------- | -------------- | ---------------------------------------------- |
-| `--eval-dataset` | required       | Path to evaluation dataset (`.json` or `.csv`) |
-| `--collection`   | `documents`    | ChromaDB collection name                       |
-| `--top-k`        | `10`           | Chunks to retrieve before reranking            |
-| `--rerank-k`     | `5`            | Chunks passed to the generator                 |
-| `--judge`        | off            | Enable LLM-as-judge scoring                    |
-| `--export`       | `results.json` | Save results to a `.json` file                 |
-
-### 4. View dashboard
-
-After the benchmark finished, run the below command to start a Streamlit dashboard:
-
-```bash
-streamlit run dashboard.py [exported_benchmark_file]
+├── api/            # FastAPI backend (port 8000)
+│   └── main.py
+├── backend/        # Python library (components, metrics, pipeline core)
+│   ├── components/ # Retrievers, rerankers, generators + registry
+│   ├── core/       # RAGPipeline, BenchmarkRunner, types
+│   ├── datasets/   # EvalDataset loader
+│   └── metrics/    # ROUGE, retrieval metrics, LLM-as-judge
+├── frontend/       # Next.js web UI (port 3000)
+├── evaluation/     # Evaluation dataset files (.json)
+├── benchmarks/     # Saved benchmark results (.json, auto-created)
+└── chroma_db/      # Persistent ChromaDB vector store (auto-created)
 ```

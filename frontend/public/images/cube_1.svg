@@ -1,0 +1,7 @@
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M10 10L18 5.5L18 14.6184L10 19L10 10Z" fill="#2A9D8F"/>
+<path d="M10 19L10 10L2 5.5L2 14.6184L10 19Z" fill="#E76F51"/>
+<path d="M10 10L18 5.5L10 1L2 5.5L10 10Z" fill="#E76F51"/>
+<path d="M10 10L18 5.5L10 1L2 5.5L10 10Z" fill="white"/>
+<path d="M18 5.5L10 10M2 5.5L2 14.6184L10 19L18 14.6184L18 5.5L10 1L2 5.5ZM10 10L10 19M10 10L2 5.5" stroke="black"/>
+</svg>
