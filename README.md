@@ -75,13 +75,14 @@ Browse the `.json` evaluation files stored in the `evaluation/` folder. Each fil
 
 ```json
 [
-  { "question": "What is X?",
+  {
+    "question": "What is X?",
     "answer": "X is ...",
     "contexts": [
-        "X has many ..."
-        "X is know for ..."
-      ]
-    },
+      "X has many ...",
+      "X is known for ..."
+    ]
+  },
   ...
 ]
 ```
