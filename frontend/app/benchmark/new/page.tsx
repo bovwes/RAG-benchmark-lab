@@ -7,14 +7,16 @@ import {
   runBenchmark,
   getCollections,
   getComponents,
+  listEvaluationFiles,
   type BenchConfigSpec,
   type ComponentCategory,
   type ComponentInfo,
+  type EvalFileMeta,
 } from '@/lib/api';
 import { componentSelectId } from '@/components/ComponentSelect';
 import TextField from '@/components/TextField';
 import Spinner from '@/components/Spinner';
-import { ArrowLeftIcon, XMarkIcon } from '@heroicons/react/16/solid';
+import { ArrowLeftIcon, XMarkIcon, PlusIcon } from '@heroicons/react/16/solid';
 
 interface ConfigFormState {
   name: string;
@@ -87,7 +89,7 @@ function InlineNum({
       onChange={(e) => setRaw(e.target.value)}
       onBlur={(e) => commit(e.target.value)}
       onKeyDown={(e) => e.key === 'Enter' && commit(raw)}
-      className="w-16 text-sm bg-transparent focus:bg-neutral-200/50 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none px-1"
+      className="w-16 text-sm bg-transparent transition-all ring-1 ring-transparent hover:ring-1 hover:ring-black focus:bg-neutral-100 focus:ring-1 focus:ring-black focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none p-2"
     />
   );
 }
@@ -108,7 +110,7 @@ function InlineSelect({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       disabled={loading}
-      className="w-full bg-transparent text-sm focus:outline-none hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full bg-transparent text-sm focus:outline-none hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-200/50 p-2"
     >
       {loading ? (
         <option value="">Loading…</option>
@@ -126,7 +128,8 @@ function InlineSelect({
 export default function NewBenchmarkPage() {
   const router = useRouter();
 
-  const [evalDatasetPath, setEvalDatasetPath] = useState('eval.json');
+  const [evalDatasetPath, setEvalDatasetPath] = useState('');
+  const [evalFiles, setEvalFiles] = useState<EvalFileMeta[]>([]);
   const [collection, setCollection] = useState('documents');
   const [collections, setCollections] = useState<string[]>(['documents']);
   const [judge, setJudge] = useState(false);
@@ -161,6 +164,13 @@ export default function NewBenchmarkPage() {
   }, [generators]);
 
   useEffect(() => {
+    listEvaluationFiles()
+      .then((files) => {
+        setEvalFiles(files);
+        if (files.length > 0)
+          setEvalDatasetPath(`evaluation/${files[0].filename}`);
+      })
+      .catch(() => {});
     getCollections()
       .then(setCollections)
       .catch(() => {});
@@ -232,7 +242,7 @@ export default function NewBenchmarkPage() {
   }
 
   const thCls =
-    'px-3 py-2 text-left text-xs text-neutral-500 whitespace-nowrap';
+    'px-5 py-4 text-left text-xs text-neutral-500 whitespace-nowrap';
   const tdCls = 'px-3 py-1.5 border-b border-neutral-100';
 
   return (
@@ -255,7 +265,7 @@ export default function NewBenchmarkPage() {
               !evalDatasetPath.trim() ||
               configs.length === 0
             }
-            className="flex items-center gap-2 text-sm font-medium px-4 py-2 bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed hover:cursor-pointer transition-colors"
+            className="flex items-center gap-2 text-sm font-medium px-4 py-2 bg-black text-white hover:underline disabled:bg-neutral-300 disabled:cursor-not-allowed hover:cursor-pointer transition-colors"
           >
             {loading && <Spinner />}
             {loading ? 'Running…' : 'Start'}
@@ -266,16 +276,25 @@ export default function NewBenchmarkPage() {
       {/* Body */}
       <div className="flex flex-1 min-h-0">
         {/* Left: global settings */}
-        <aside className="w-md border-r border-neutral-200 overflow-y-auto flex flex-col divide-y divide-neutral-200 text-sm">
+        <aside className="w-lg border-r border-neutral-200 overflow-y-auto flex flex-col divide-y divide-neutral-200 text-sm">
           <div className="flex items-center justify-between p-4">
             <span className="text-neutral-500">Eval dataset</span>
-            <input
-              type="text"
+            <select
               value={evalDatasetPath}
               onChange={(e) => setEvalDatasetPath(e.target.value)}
-              placeholder="eval.json"
-              className="text-right bg-transparent focus:outline-none focus:bg-neutral-100 px-1 w-24 text-sm"
-            />
+              disabled={evalFiles.length === 0}
+              className="bg-neutral-200/50 focus:outline-none hover:bg-neutral-200 hover:cursor-pointer text-sm truncate disabled:opacity-50 disabled:cursor-not-allowed p-2 w-fit text-left"
+            >
+              {evalFiles.length === 0 ? (
+                <option value="">No eval files found</option>
+              ) : (
+                evalFiles.map((f) => (
+                  <option key={f.filename} value={`evaluation/${f.filename}`}>
+                    {f.filename} ({f.question_count}q)
+                  </option>
+                ))
+              )}
+            </select>
           </div>
 
           <div className="flex items-center justify-between p-4">
@@ -283,7 +302,7 @@ export default function NewBenchmarkPage() {
             <select
               value={collection}
               onChange={(e) => setCollection(e.target.value)}
-              className="text-right bg-transparent focus:outline-none hover:bg-neutral-50 hover:cursor-pointer text-sm max-w-[110px] truncate"
+              className="bg-neutral-200/50 text-left hover:bg-neutral-200 focus:outline-none hover:bg-neutral-50 hover:cursor-pointer text-sm max-w-[110px] truncate p-2 w-fit"
             >
               {collections.map((col) => (
                 <option key={col} value={col}>
@@ -294,17 +313,23 @@ export default function NewBenchmarkPage() {
           </div>
 
           <div className="flex items-center justify-between p-4">
-            <span className="text-neutral-500">LLM Judge</span>
+            <span
+              className={`${judge ? 'text-neutral-500' : 'text-neutral-300'}`}
+            >
+              LLM Judge
+            </span>
             <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={judge}
-                onChange={(e) => setJudge(e.target.checked)}
-                className="accent-indigo-600"
-              />
-              <span className="text-neutral-400 text-xs">
-                {judge ? 'On' : 'Off'}
-              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={judge}
+                onClick={() => setJudge((v) => !v)}
+                className={`relative inline-flex h-7 w-13 shrink-0 items-center rounded-full transition-colors duration-200 hover:cursor-pointer focus:outline-none ${judge ? 'bg-salmon' : 'bg-neutral-200'}`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${judge ? 'translate-x-7' : 'translate-x-1'}`}
+                />
+              </button>
             </label>
           </div>
 
@@ -369,7 +394,10 @@ export default function NewBenchmarkPage() {
                             updateConfig(i, { name: e.target.value })
                           }
                           placeholder={`Config ${i + 1}`}
-                          className="bg-transparent focus:outline-none focus:bg-neutral-200/50 px-1 py-0.5 w-28 transition-colors"
+                          onBlur={(e) => {
+                            e.target.scrollLeft = 0;
+                          }}
+                          className="bg-transparent transition-all focus:outline-none ring-1 ring-transparent hover:ring-black focus:ring-black hover:bg-neutral-100 focus:bg-neutral-100 p-2 min-w-40 w-full text-left"
                         />
                       </td>
                       <td className={tdCls}>
@@ -486,9 +514,9 @@ export default function NewBenchmarkPage() {
             <button
               onClick={addConfig}
               disabled={componentsLoading}
-              className="text-sm font-medium underline underline-offset-4 hover:cursor-pointer hover:text-black"
+              className="text-sm font-medium flex gap-2 pb-1 hover:cursor-pointer hover:border-b"
             >
-              Add config
+              <PlusIcon className="size-5" /> Add config
             </button>
           </div>
         </main>

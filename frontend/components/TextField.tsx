@@ -45,7 +45,7 @@ export default function TextField({
     <>
       <button
         onClick={openModal}
-        className="flex items-center justify-between px-2 py-1.5 hover:bg-neutral-200/50 w-full text-left hover:cursor-pointer"
+        className="flex items-center justify-between px-2 py-1.5 hover:bg-neutral-200/50 w-full text-left hover:cursor-pointer gap-2"
       >
         <span className="text-sm text-neutral-500 select-none">{label}</span>
 
