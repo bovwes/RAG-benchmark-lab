@@ -16,6 +16,7 @@ import {
 import { componentSelectId } from '@/components/ComponentSelect';
 import TextField from '@/components/TextField';
 import Spinner from '@/components/Spinner';
+import BenchmarkRunModal from '@/components/BenchmarkRunModal';
 import { ArrowLeftIcon, XMarkIcon, PlusIcon } from '@heroicons/react/16/solid';
 
 interface ConfigFormState {
@@ -141,6 +142,10 @@ export default function NewBenchmarkPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const questionCount =
+    evalFiles.find((f) => `evaluation/${f.filename}` === evalDatasetPath)
+      ?.question_count ?? 0;
+
   const retrievers =
     componentCategories.find((c) => c.category === 'retrievers')?.components ??
     [];
@@ -247,6 +252,14 @@ export default function NewBenchmarkPage() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-x-hidden">
+      <BenchmarkRunModal
+        open={loading}
+        configs={configs}
+        questionCount={questionCount}
+        evalDatasetPath={evalDatasetPath}
+        collection={collection}
+        judge={judge}
+      />
       {/* Header */}
       <div className="flex h-14 shrink-0 items-center gap-2 border-b border-neutral-200">
         <Link
