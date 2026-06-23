@@ -61,6 +61,8 @@ class BenchmarkRunner:
         
         results = []
 
+        print("Starting benchmark")
+        
         for cfg in configs:
             print(f"\nRunning configuration: {cfg.name}")
 

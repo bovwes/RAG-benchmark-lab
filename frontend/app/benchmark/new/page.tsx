@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  runBenchmark,
+  streamBenchmark,
   getCollections,
   getComponents,
   listEvaluationFiles,
@@ -141,6 +141,7 @@ export default function NewBenchmarkPage() {
   const [componentsLoading, setComponentsLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [logLines, setLogLines] = useState<string[]>([]);
 
   const questionCount =
     evalFiles.find((f) => `evaluation/${f.filename}` === evalDatasetPath)
@@ -223,6 +224,7 @@ export default function NewBenchmarkPage() {
     if (!evalDatasetPath.trim() || configs.length === 0 || loading) return;
     setLoading(true);
     setError(null);
+    setLogLines([]);
     try {
       const apiConfigs: BenchConfigSpec[] = configs.map((cfg) => ({
         name: cfg.name,
@@ -233,13 +235,23 @@ export default function NewBenchmarkPage() {
         top_k_retrieve: cfg.top_k_retrieve,
         top_k_rerank: cfg.top_k_rerank,
       }));
-      const data = await runBenchmark({
+      for await (const event of streamBenchmark({
         eval_dataset_path: evalDatasetPath.trim(),
         collection,
         judge,
         configs: apiConfigs,
-      });
-      router.push('/benchmark/' + encodeURIComponent(data.saved_as));
+      })) {
+        if (event.type === 'log') {
+          setLogLines((prev) => [...prev, event.line]);
+        } else if (event.type === 'done') {
+          router.push(
+            '/benchmark/' + encodeURIComponent(event.result.saved_as),
+          );
+          return;
+        } else if (event.type === 'error') {
+          throw new Error(event.message);
+        }
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unknown error');
       setLoading(false);
@@ -259,6 +271,7 @@ export default function NewBenchmarkPage() {
         evalDatasetPath={evalDatasetPath}
         collection={collection}
         judge={judge}
+        logLines={logLines}
       />
       {/* Header */}
       <div className="flex h-14 shrink-0 items-center gap-2 border-b border-neutral-200">
