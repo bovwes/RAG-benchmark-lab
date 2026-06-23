@@ -524,13 +524,15 @@ export default function NewBenchmarkPage() {
             </table>
           )}
           <div className="p-4">
-            <button
-              onClick={addConfig}
-              disabled={componentsLoading}
-              className="text-sm font-medium flex gap-2 pb-1 hover:cursor-pointer hover:border-b"
-            >
-              <PlusIcon className="size-5" /> Add config
-            </button>
+            {configs.length < 5 && (
+              <button
+                onClick={addConfig}
+                disabled={componentsLoading}
+                className="text-sm font-medium flex gap-2 pb-1 hover:cursor-pointer hover:border-b"
+              >
+                <PlusIcon className="size-5" /> Add config
+              </button>
+            )}
           </div>
         </main>
       </div>
