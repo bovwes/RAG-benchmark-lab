@@ -67,7 +67,7 @@ export default function BenchmarkLegend({
                     {cfg.name}
                   </span>
                 </div>
-                <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 text-xs text-neutral-400 ml-4">
+                <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 text-xs text-neutral-400 ml-4 max-w-60 truncate">
                   <dt className="text-neutral-300">Retriever</dt>
                   <dd>{cfg.retriever}</dd>
                   <dt className="text-neutral-300">top_k retrieve</dt>
@@ -78,16 +78,12 @@ export default function BenchmarkLegend({
                   <dd>{cfg.top_k_rerank}</dd>
                   <dt className="text-neutral-300">Generator</dt>
                   <dd>{cfg.generator}</dd>
-                  {Object.entries(cfg.generator_params).flatMap(([k, v]) =>
-                    k === 'prompt_template'
-                      ? []
-                      : [
-                          <dt key={`${k}-k`} className="text-neutral-300">
-                            {k}
-                          </dt>,
-                          <dd key={`${k}-v`}>{String(v)}</dd>,
-                        ],
-                  )}
+                  {Object.entries(cfg.generator_params).flatMap(([k, v]) => [
+                    <dt key={`${k}-k`} className="text-neutral-300">
+                      {k}
+                    </dt>,
+                    <dd key={`${k}-v`}>{String(v)}</dd>,
+                  ])}
                 </dl>
               </div>
             )}
