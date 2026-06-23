@@ -147,7 +147,7 @@ export default function BenchmarkResults({ results, judge, configs }: Props) {
         </div>
 
         <div className="flex flex-col gap-4">
-          <Card title="Latency (ms)">
+          <Card title="Latency">
             <BenchmarkLatencyChart
               data={filtered.map((r) => ({
                 name: r.config,
@@ -174,7 +174,7 @@ export default function BenchmarkResults({ results, judge, configs }: Props) {
                   </option>
                 ))}
               </select>
-              <div className="space-y-2 max-h-[30vh] overflow-y-auto">
+              <div className="space-y-2 max-h-[40vh] overflow-y-auto">
                 {activeQuestionConfig?.per_question.map((q, i) => (
                   <BenchmarkQuestionCard
                     key={i}

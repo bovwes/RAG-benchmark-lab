@@ -1,4 +1,6 @@
 import type { QuestionResult } from '@/lib/api';
+import { CheckIcon } from '@heroicons/react/16/solid';
+import Image from 'next/image';
 
 export default function BenchmarkQuestionCard({
   q,
@@ -16,14 +18,36 @@ export default function BenchmarkQuestionCard({
       className={`overflow-hidden transition-all border ${
         expanded
           ? 'bg-white'
-          : 'bg-white border-neutral-300 hover:border-black hover:cursor-pointer'
+          : 'bg-white border-neutral-300 hover:border-black '
       }`}
     >
       <button
         onClick={onToggle}
-        className="w-full text-left px-4 py-3 hover:bg-zinc-50/50 transition-colors"
+        className="w-full text-left p-2 hover:bg-zinc-50/50 transition-colors hover:cursor-pointer"
       >
-        <p className="text-sm truncate">{q.question}</p>
+        <div className="flex items-center gap-4">
+          <div className="size-6 flex items-center justify-center shrink-0">
+            <Image
+              src={
+                q.answer.token_f1 === 1
+                  ? '/images/smile_icon.svg'
+                  : q.answer.token_f1 >= 0.3
+                    ? '/images/neutral_icon.svg'
+                    : '/images/sad_icon.svg'
+              }
+              height={30}
+              width={30}
+              alt={
+                q.answer.token_f1 === 1
+                  ? 'Good F1 score'
+                  : q.answer.token_f1 >= 0.3
+                    ? 'Mediocre F1 score'
+                    : 'Bad F1 score'
+              }
+            />
+          </div>
+          <p className="text-sm truncate">{q.question}</p>
+        </div>
       </button>
 
       {expanded && (
@@ -43,21 +67,21 @@ export default function BenchmarkQuestionCard({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-3 border-t border-neutral-200">
-            <div>
+          <div className="grid xl:grid-cols-2 3xl:grid-cols-4 gap-4">
+            <div className="flex flex-col gap-1 p-2 bg-neutral-100">
               <p className="font-semibold mb-1">Retrieval</p>
               <Metric label="Recall@K" value={q.retrieval.recall_at_k} />
               <Metric label="Precision@K" value={q.retrieval.precision_at_k} />
               <Metric label="MRR" value={q.retrieval.mrr} />
             </div>
-            <div>
+            <div className="flex flex-col gap-1 p-2 bg-neutral-100">
               <p className="font-semibold mb-1">Answer quality</p>
               <Metric label="Token F1" value={q.answer.token_f1} />
               <Metric label="ROUGE-L" value={q.answer.rouge_l} />
               <Metric label="Exact Match" value={q.answer.exact_match} />
             </div>
             {showJudge && (
-              <div>
+              <div className="flex flex-col gap-1 p-2 bg-neutral-100">
                 <p className="font-semibold mb-1">Judge scores</p>
                 <Metric
                   label="Faithfulness"
@@ -73,7 +97,7 @@ export default function BenchmarkQuestionCard({
                 />
               </div>
             )}
-            <div>
+            <div className="flex flex-col gap-1 p-2 bg-neutral-100">
               <p className="font-semibold mb-1">Latency (ms)</p>
               <Metric
                 label="Retrieve"
@@ -107,12 +131,12 @@ function Metric({
   suffix?: string;
 }) {
   return (
-    <p className="text-neutral-500">
-      {label}{' '}
-      <span className="text-neutral-800">
+    <div className="flex justify-between">
+      <p className="text-neutral-600">{label} </p>{' '}
+      <p>
         {value.toFixed(decimals)}
         {suffix}
-      </span>
-    </p>
+      </p>
+    </div>
   );
 }
