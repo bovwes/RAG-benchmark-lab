@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { type BenchmarkConfigResult, type BenchConfigSpec } from '@/lib/api';
 import Card from './Card';
 import MetricBarChart from './MetricBarChart';
+import MetricStarRating from './MetricStarRating';
 import BenchmarkLatencyChart from './BenchmarkLatencyChart';
 import BenchmarkQuestionCard from './BenchmarkQuestionCard';
 import BenchmarkLegend from './BenchmarkLegend';
@@ -132,16 +133,26 @@ export default function BenchmarkResults({ results, judge, configs }: Props) {
         <div className="grid xl:grid-cols-2 2xl:grid-cols-3 3xl:grid-cols-4 gap-4 h-fit">
           {METRICS.filter((m) => !m.judge || judge).map((m) => (
             <Card key={m.key} title={m.label} hint={m.subtitle} square>
-              <MetricBarChart
-                subtitle={m.subtitle}
-                data={filtered.map((r) => ({
-                  name: r.config,
-                  value: r.metrics[m.key] ?? 0,
-                }))}
-                colorOf={colorOf}
-                domainMin={m.domainMin}
-                domainMax={m.domainMax}
-              />
+              {m.judge ? (
+                <MetricStarRating
+                  data={filtered.map((r) => ({
+                    name: r.config,
+                    value: r.metrics[m.key] ?? 0,
+                  }))}
+                  colorOf={colorOf}
+                />
+              ) : (
+                <MetricBarChart
+                  subtitle={m.subtitle}
+                  data={filtered.map((r) => ({
+                    name: r.config,
+                    value: r.metrics[m.key] ?? 0,
+                  }))}
+                  colorOf={colorOf}
+                  domainMin={m.domainMin}
+                  domainMax={m.domainMax}
+                />
+              )}
             </Card>
           ))}
         </div>
