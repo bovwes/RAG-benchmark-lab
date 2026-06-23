@@ -6,7 +6,7 @@ import Card from './Card';
 import MetricBarChart from './MetricBarChart';
 import BenchmarkLatencyChart from './BenchmarkLatencyChart';
 import BenchmarkQuestionCard from './BenchmarkQuestionCard';
-import ConfigDetailsPanel from './ConfigDetailsPanel';
+import BenchmarkLegend from './BenchmarkLegend';
 
 const COLOR_PALETTE = ['#264653', '#2A9D8F', '#E9C46A', '#F4A261', '#E76F51'];
 
@@ -120,40 +120,13 @@ export default function BenchmarkResults({ results, judge, configs }: Props) {
 
   return (
     <div className="flex flex-col gap-4 p-5">
-      <div className="flex flex-wrap items-center gap-2">
-        {results.map((r) => (
-          <label
-            key={r.config}
-            className="flex items-center gap-2 text-xs cursor-pointer select-none hover:bg-neutral-100 p-2"
-          >
-            <input
-              type="checkbox"
-              checked={visible.has(r.config)}
-              onChange={() => toggleVisible(r.config)}
-              className="sr-only"
-            />
-            <span
-              className="w-2.5 h-2.5 inline-block"
-              style={{
-                backgroundColor: visible.has(r.config)
-                  ? colorOf(r.config)
-                  : '#d4d4d4',
-              }}
-            />
-            <span
-              className={
-                visible.has(r.config) ? 'text-neutral-800' : 'text-neutral-400'
-              }
-            >
-              {r.config}
-            </span>
-          </label>
-        ))}
-      </div>
-
-      {configs && configs.length > 0 && (
-        <ConfigDetailsPanel configs={configs} colorOf={colorOf} />
-      )}
+      <BenchmarkLegend
+        results={results}
+        visible={visible}
+        configs={configs}
+        colorOf={colorOf}
+        onToggle={toggleVisible}
+      />
 
       <div className="grid grid-cols-2 gap-4">
         <div className="grid xl:grid-cols-2 2xl:grid-cols-3 3xl:grid-cols-4 gap-4 h-fit">
