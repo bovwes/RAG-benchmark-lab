@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import IngestModal from '@/components/IngestModal';
+import Link from 'next/link';
 import TileCard from '@/components/TileCard';
 import ViewToggle from '@/components/ViewToggle';
 import { useView } from '@/context/ViewContext';
@@ -25,7 +25,6 @@ export default function IngestPage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showModal, setShowModal] = useState(false);
   const { view, setView } = useView();
 
   async function fetchCollections() {
@@ -59,21 +58,14 @@ export default function IngestPage() {
         <p className="text-base font-bold">Collections</p>
         <div className="flex items-center gap-2">
           <ViewToggle view={view} onChange={setView} />
-          <button
-            onClick={() => setShowModal(true)}
-            className="bg-black text-sm text-white px-4 py-2 hover:underline hover:cursor-pointer"
+          <Link
+            href="/collections/new"
+            className="bg-black text-sm text-white px-4 py-2 hover:underline"
           >
             New collection
-          </button>
+          </Link>
         </div>
       </div>
-
-      {showModal && (
-        <IngestModal
-          onClose={() => setShowModal(false)}
-          onSuccess={fetchCollections}
-        />
-      )}
 
       <div className="flex-1 overflow-y-auto p-4">
         {error && <p className="text-sm text-red-500 mb-4">{error}</p>}

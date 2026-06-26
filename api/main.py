@@ -86,6 +86,30 @@ class IngestRequest(BaseModel):
     chunk_overlap: int = 64
     extensions: list[str] = [".txt", ".md", ".pdf"]
     overwrite: bool = False
+    strategy: rb.ChunkStrategy = "char"
+    separators: list[str] = ["\n\n", "\n", ". ", " ", ""]
+
+
+class ChunkPreviewRequest(BaseModel):
+    text: str
+    strategy: rb.ChunkStrategy = "char"
+    chunk_size: int = 512
+    chunk_overlap: int = 64
+    separators: list[str] = ["\n\n", "\n", ". ", " ", ""]
+
+
+class ChunkPreviewChunk(BaseModel):
+    index: int
+    text: str
+    char_count: int
+
+
+class ChunkPreviewResponse(BaseModel):
+    chunks: list[ChunkPreviewChunk]
+    total_chunks: int
+    avg_chunk_size: float
+    min_chunk_size: int
+    max_chunk_size: int
 
 
 class IngestResponse(BaseModel):
@@ -164,13 +188,38 @@ def _read_file(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
-def _chunk_text(text: str, chunk_size: int, overlap: int) -> list[str]:
-    chunks, start = [], 0
-    while start < len(text):
-        end = start + chunk_size
-        chunks.append(text[start:end].strip())
-        start += chunk_size - overlap
-    return [c for c in chunks if c]
+@app.post("/api/chunk-preview", response_model=ChunkPreviewResponse)
+def chunk_preview(req: ChunkPreviewRequest):
+    infos = rb.preview_chunks(req.text, req.strategy, req.chunk_size, req.chunk_overlap, req.separators)
+    if not infos:
+        return ChunkPreviewResponse(chunks=[], total_chunks=0, avg_chunk_size=0.0, min_chunk_size=0, max_chunk_size=0)
+    sizes = [c.char_count for c in infos]
+    return ChunkPreviewResponse(
+        chunks=[ChunkPreviewChunk(index=c.index, text=c.text, char_count=c.char_count) for c in infos],
+        total_chunks=len(infos),
+        avg_chunk_size=sum(sizes) / len(sizes),
+        min_chunk_size=min(sizes),
+        max_chunk_size=max(sizes),
+    )
+
+
+@app.get("/api/sample-text")
+def sample_text(folder_path: str, extensions: str = ".txt,.md,.pdf", max_chars: int = 3000):
+    folder = Path(folder_path)
+    if not folder.is_dir():
+        raise HTTPException(status_code=400, detail=f"Not a directory: {folder_path}")
+    exts = {e.strip().lower() if e.strip().startswith(".") else f".{e.strip().lower()}" for e in extensions.split(",")}
+    files = [p for p in folder.rglob("*") if p.is_file() and p.suffix.lower() in exts]
+    if not files:
+        raise HTTPException(status_code=400, detail="No matching files found")
+    for f in sorted(files):
+        try:
+            text = _read_file(f)
+            if text.strip():
+                return {"text": text[:max_chars], "filename": f.name}
+        except Exception:
+            continue
+    raise HTTPException(status_code=400, detail="Could not read any file")
 
 
 @app.post("/api/ingest", response_model=IngestResponse)
@@ -200,7 +249,7 @@ def ingest_folder(req: IngestRequest):
             text = _read_file(file)
         except Exception:
             continue
-        for chunk in _chunk_text(text, req.chunk_size, req.chunk_overlap):
+        for chunk in rb.apply_chunking(text, req.strategy, req.chunk_size, req.chunk_overlap, req.separators):
             all_chunks.append(chunk)
             all_ids.append(str(uuid.uuid4()))
             all_metas.append({"source": file.name, "page": 0})
@@ -220,6 +269,16 @@ def ingest_folder(req: IngestRequest):
         files_processed=len(files),
         chunks_added=len(all_chunks),
     )
+
+
+@app.get("/api/folder-info")
+def folder_info(folder_path: str, extensions: str = ".txt,.md,.pdf"):
+    folder = Path(folder_path)
+    if not folder.is_dir():
+        raise HTTPException(status_code=400, detail=f"Not a directory: {folder_path}")
+    exts = {e.strip().lower() if e.strip().startswith(".") else f".{e.strip().lower()}" for e in extensions.split(",")}
+    files = [p for p in folder.rglob("*") if p.is_file() and p.suffix.lower() in exts]
+    return {"file_count": len(files)}
 
 
 @app.get("/api/health")

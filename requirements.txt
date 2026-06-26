@@ -10,3 +10,4 @@ pyyaml
 rouge-score
 fastapi
 uvicorn[standard]
+langchain-text-splitters

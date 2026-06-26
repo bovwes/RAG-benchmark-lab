@@ -18,13 +18,8 @@ A tool for benchmarking RAG (Retrieval-Augmented Generation) pipeline configurat
 </table>
 <table>
 <tr>
-<td style="width:50%"><img src="./images/sh_new_benchmark.png" alt="Screenshot New Benchmark Page" width="100%"/></td>
+<td style="width:50%"><img src="./images/sh_new_collection.png" alt="Screenshot New Benchmark Page" width="100%"/></td>
 <td style="width:50%"><img src="./images/sh_running_benchmark.png" alt="Screenshot Running Benchmark" width="100%"/></td>
-</tr>
-</table>
-<table>
-<tr>
-<td><img src="./images/sh_answer_breakdown.png" alt="Screenshot Answer Breakdown" width="100%"/></td>
 </tr>
 </table>
 

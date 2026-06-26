@@ -14,6 +14,7 @@ from .metrics import (
 from .core.types import RetrievedChunk
 from .core.pipeline import PipelineConfig, PipelineResult, RAGPipeline
 from .core.runner import ItemResult, BenchmarkResult, BenchmarkRunner
+from .core.chunking import ChunkStrategy, ChunkInfo, apply_chunking, preview_chunks, DEFAULT_SEPARATORS
 from .report import print_table, to_json, to_dict
 
 __all__ = [
@@ -52,6 +53,12 @@ __all__ = [
     "ItemResult",
     "BenchmarkResult",
     "BenchmarkRunner",
+    # chunking
+    "ChunkStrategy",
+    "ChunkInfo",
+    "apply_chunking",
+    "preview_chunks",
+    "DEFAULT_SEPARATORS",
     # reporting
     "print_table",
     "to_json",

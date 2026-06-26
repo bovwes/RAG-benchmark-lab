@@ -8,7 +8,7 @@ const navGroups = [
   {
     label: 'Context',
     items: [
-      { href: '/ingest', label: 'Collections', Icon: 'images/files.svg' },
+      { href: '/collections', label: 'Collections', Icon: 'images/files.svg' },
       {
         href: '/evaluation',
         label: 'Evaluation sets',
