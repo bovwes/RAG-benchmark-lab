@@ -14,15 +14,10 @@ import {
   DataTableRow,
   DataTableCell,
 } from '@/components/DataTable';
-
-type Collection = {
-  name: string;
-  count: number;
-  metadata: Record<string, string | number | boolean>;
-};
+import { getCollectionsDetail, type CollectionDetail } from '@/lib/api';
 
 export default function IngestPage() {
-  const [collections, setCollections] = useState<Collection[]>([]);
+  const [collections, setCollections] = useState<CollectionDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { view, setView } = useView();
@@ -31,12 +26,7 @@ export default function IngestPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/collections`,
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setCollections(data.collections);
+      setCollections(await getCollectionsDetail());
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load collections');
     } finally {

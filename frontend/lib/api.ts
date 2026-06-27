@@ -162,11 +162,24 @@ export async function getFolderInfo(
   return res.json() as Promise<{ file_count: number }>;
 }
 
+export interface CollectionDetail {
+  name: string;
+  count: number;
+  metadata: Record<string, string | number | boolean>;
+}
+
 export async function getCollections(): Promise<string[]> {
   const res = await fetch(`${API_URL}/api/collections`);
   if (!res.ok) throw new Error('Could not load collections');
-  const data = (await res.json()) as { collections: { name: string }[] };
+  const data = (await res.json()) as { collections: CollectionDetail[] };
   return data.collections.map((c) => c.name);
+}
+
+export async function getCollectionsDetail(): Promise<CollectionDetail[]> {
+  const res = await fetch(`${API_URL}/api/collections`);
+  if (!res.ok) throw new Error('Could not load collections');
+  const data = (await res.json()) as { collections: CollectionDetail[] };
+  return data.collections;
 }
 
 export interface ComponentParam {

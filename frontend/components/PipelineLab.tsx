@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   runPipeline,
   getCollections,
@@ -9,20 +9,20 @@ import {
   type RunRequest,
   type ComponentCategory,
   type ComponentInfo,
-} from '@/lib/api';
-import Card from './Card';
-import ConfigSection from './ConfigSection';
-import NumberField from './NumberField';
-import TextField from './TextField';
-import ComponentSelect, { componentSelectId } from './ComponentSelect';
-import Dropdown from './Dropdown';
-import LatencyBar from './LatencyBar';
-import ChunkCard from './ChunkCard';
-import SemanticScatterplot from './SemanticScatterplot';
-import Spinner from './Spinner';
-import { ArrowUpIcon } from '@heroicons/react/24/outline';
-import ChatExchange from './ChatExchange';
-import Image from 'next/image';
+} from "@/lib/api";
+import Card from "./Card";
+import ConfigSection from "./ConfigSection";
+import NumberField from "./NumberField";
+import TextField from "./TextField";
+import ComponentSelect, { componentSelectId } from "./ComponentSelect";
+import Dropdown from "./Dropdown";
+import LatencyBar from "./LatencyBar";
+import ChunkCard from "./ChunkCard";
+import SemanticScatterplot from "./SemanticScatterplot";
+import Spinner from "./Spinner";
+import { ArrowUpIcon } from "@heroicons/react/24/outline";
+import ChatExchange from "./ChatExchange";
+import Image from "next/image";
 
 interface Config {
   retriever: string;
@@ -41,7 +41,7 @@ function defaultParamsFor(
   for (const p of component.parameters) {
     if (p.required || p.default === null) continue;
     out[p.name] =
-      typeof p.default === 'string' || typeof p.default === 'number'
+      typeof p.default === "string" || typeof p.default === "number"
         ? p.default
         : String(p.default);
   }
@@ -50,19 +50,19 @@ function defaultParamsFor(
 
 export default function PipelineLab() {
   const [config, setConfig] = useState<Config>({
-    retriever: '',
-    reranker: '',
-    generator: '',
+    retriever: "",
+    reranker: "",
+    generator: "",
     generatorParams: {},
     topKRetrieve: 10,
     topKRerank: 5,
-    collection: 'documents',
+    collection: "documents",
   });
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [result, setResult] = useState<RunResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [collections, setCollections] = useState<string[]>(['documents']);
+  const [collections, setCollections] = useState<string[]>(["documents"]);
   const [expandedChunks, setExpandedChunks] = useState<Set<number>>(new Set());
   const [hasQueried, setHasQueried] = useState(false);
   const [componentCategories, setComponentCategories] = useState<
@@ -71,13 +71,13 @@ export default function PipelineLab() {
   const [componentsLoading, setComponentsLoading] = useState(true);
 
   const retrievers =
-    componentCategories.find((c) => c.category === 'retrievers')?.components ??
+    componentCategories.find((c) => c.category === "retrievers")?.components ??
     [];
   const rerankers =
-    componentCategories.find((c) => c.category === 'rerankers')?.components ??
+    componentCategories.find((c) => c.category === "rerankers")?.components ??
     [];
   const generators =
-    componentCategories.find((c) => c.category === 'generators')?.components ??
+    componentCategories.find((c) => c.category === "generators")?.components ??
     [];
 
   useEffect(() => {
@@ -90,11 +90,11 @@ export default function PipelineLab() {
     getComponents()
       .then((cats) => {
         setComponentCategories(cats);
-        const firstRetriever = cats.find((c) => c.category === 'retrievers')
+        const firstRetriever = cats.find((c) => c.category === "retrievers")
           ?.components[0];
-        const firstReranker = cats.find((c) => c.category === 'rerankers')
+        const firstReranker = cats.find((c) => c.category === "rerankers")
           ?.components[0];
-        const firstGenerator = cats.find((c) => c.category === 'generators')
+        const firstGenerator = cats.find((c) => c.category === "generators")
           ?.components[0];
         setConfig((prev) => ({
           ...prev,
@@ -145,7 +145,7 @@ export default function PipelineLab() {
       };
       setResult(await runPipeline(req));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Unknown error');
+      setError(e instanceof Error ? e.message : "Unknown error");
     } finally {
       setLoading(false);
     }
@@ -215,13 +215,13 @@ export default function PipelineLab() {
               const value =
                 config.generatorParams[p.name] ??
                 (p.default as string | number) ??
-                '';
+                "";
               const onChange = (v: string | number) =>
                 setConfig((c) => ({
                   ...c,
                   generatorParams: { ...c.generatorParams, [p.name]: v },
                 }));
-              if (p.type === 'int') {
+              if (p.type === "int") {
                 return (
                   <NumberField
                     key={p.name}
@@ -231,7 +231,7 @@ export default function PipelineLab() {
                   />
                 );
               }
-              if (p.type === 'float') {
+              if (p.type === "float") {
                 return (
                   <NumberField
                     key={p.name}
@@ -314,19 +314,19 @@ export default function PipelineLab() {
         <div
           className={
             !hasQueried
-              ? 'flex flex-col items-center justify-center p-4 h-full gap-8'
-              : 'p-4'
+              ? "flex flex-col items-center justify-center p-4 h-full gap-6"
+              : "p-4"
           }
         >
           {!hasQueried && (
             <>
               <Image
-                src={'/images/chat_large.svg'}
-                height={240}
-                width={320}
+                src={"/images/chat_large.svg"}
+                height={120}
+                width={180}
                 alt="Ask a question"
               />
-              <p className="font-bold text-2xl">Playground</p>
+              <p className="font-bold text-xl">Playground</p>
             </>
           )}
           <div className="w-full max-w-2xl mx-auto ring-1 ring-neutral-300 bg-white flex items-center gap-2 p-2 pl-4">
@@ -334,16 +334,16 @@ export default function PipelineLab() {
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
-                e.target.style.height = 'auto';
-                e.target.style.height = e.target.scrollHeight + 'px';
+                e.target.style.height = "auto";
+                e.target.style.height = e.target.scrollHeight + "px";
               }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleRun();
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleRun();
               }}
               placeholder="Ask a question"
               spellCheck={false}
               rows={1}
-              style={{ maxHeight: '8rem' }}
+              style={{ maxHeight: "8rem" }}
               className="flex-1 text-sm resize-none overflow-y-hidden focus:outline-none transition-all placeholder:text-neutral-500"
             />
 

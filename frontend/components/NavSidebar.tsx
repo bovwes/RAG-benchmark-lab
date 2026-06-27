@@ -1,31 +1,31 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import Image from 'next/image';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import Image from "next/image";
 
 const navGroups = [
   {
-    label: 'Context',
+    label: "Context",
     items: [
-      { href: '/collections', label: 'Collections', Icon: 'images/files.svg' },
+      { href: "/collections", label: "Collections", Icon: "images/files.svg" },
       {
-        href: '/evaluation',
-        label: 'Evaluation sets',
-        Icon: 'images/star.svg',
+        href: "/evaluation",
+        label: "Evaluation sets",
+        Icon: "images/star.svg",
       },
     ],
   },
   {
-    label: 'RAG',
+    label: "RAG",
     items: [
-      { href: '/components', label: 'Components', Icon: 'images/blocks.svg' },
+      { href: "/components", label: "Components", Icon: "images/blocks.svg" },
       {
-        href: '/playground',
-        label: 'Playground',
-        Icon: 'images/chat.svg',
+        href: "/playground",
+        label: "Playground",
+        Icon: "images/chat.svg",
       },
-      { href: '/benchmark', label: 'Benchmarks', Icon: 'images/diamond.svg' },
+      { href: "/benchmark", label: "Benchmarks", Icon: "images/diamond.svg" },
     ],
   },
 ];
@@ -34,7 +34,7 @@ export default function NavSidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="w-fit lg:w-3xs shrink-0 flex flex-col overflow-y-auto border-r border-neutral-200 bg-neutral-50">
+    <div className="w-fit lg:w-52 shrink-0 flex flex-col overflow-y-auto border-r border-neutral-200 bg-neutral-50">
       <div className="h-4 grid grid-cols-5">
         <div className="bg-[#264653]" />
         <div className="bg-[#2A9D8F]" />
@@ -50,19 +50,19 @@ export default function NavSidebar() {
             </div>
             {items.map(({ href, label: itemLabel, Icon }) => {
               const active =
-                pathname === href || pathname.startsWith(href + '/');
+                pathname === href || pathname.startsWith(href + "/");
               return (
                 <Link
                   key={href}
                   href={href}
                   className={`flex items-center gap-3 py-1 px-3 text-sm underline-offset-4 ${
-                    active ? '' : 'hover:underline'
+                    active ? "" : "hover:underline"
                   }`}
                   style={
                     active
                       ? {
                           backgroundImage:
-                            'repeating-linear-gradient(-45deg, transparent, transparent 4px, rgba(0,0,0,0.04) 4px, rgba(0,0,0,0.04) 8px)',
+                            "repeating-linear-gradient(-45deg, transparent, transparent 4px, rgba(0,0,0,0.04) 4px, rgba(0,0,0,0.04) 8px)",
                         }
                       : undefined
                   }

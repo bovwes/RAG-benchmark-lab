@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { listBenchmarks, type BenchmarkFileMeta } from '@/lib/api';
-import Spinner from '@/components/Spinner';
-import TileCard from '@/components/TileCard';
-import ViewToggle from '@/components/ViewToggle';
-import { useView } from '@/context/ViewContext';
-import { PlusCircleIcon } from '@heroicons/react/16/solid';
-import Image from 'next/image';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { listBenchmarks, type BenchmarkFileMeta } from "@/lib/api";
+import Spinner from "@/components/Spinner";
+import TileCard from "@/components/TileCard";
+import ViewToggle from "@/components/ViewToggle";
+import { useView } from "@/context/ViewContext";
+import { PlusCircleIcon } from "@heroicons/react/16/solid";
+import Image from "next/image";
 import {
   DataTable,
   DataTableHead,
@@ -16,34 +16,37 @@ import {
   DataTableBody,
   DataTableRow,
   DataTableCell,
-} from '@/components/DataTable';
+} from "@/components/DataTable";
 
 function formatDate(iso: string): string {
   try {
     return new Date(iso).toLocaleString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   } catch {
     return iso;
   }
 }
 
-type SortCol = 'collection' | 'saved_at' | 'filename';
+type SortCol = "collection" | "saved_at" | "filename";
 
 export default function BenchmarkListPage() {
   const [files, setFiles] = useState<BenchmarkFileMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const { view, setView } = useView();
   const [sortCol, setSortCol] = useState<SortCol | null>(null);
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   function handleSort(col: SortCol) {
-    if (sortCol === col) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-    else { setSortCol(col); setSortDir('asc'); }
+    if (sortCol === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else {
+      setSortCol(col);
+      setSortDir("asc");
+    }
   }
 
   const sortedFiles = sortCol
@@ -51,7 +54,7 @@ export default function BenchmarkListPage() {
         const av = a[sortCol];
         const bv = b[sortCol];
         const cmp = av < bv ? -1 : av > bv ? 1 : 0;
-        return sortDir === 'asc' ? cmp : -cmp;
+        return sortDir === "asc" ? cmp : -cmp;
       })
     : files;
 
@@ -88,19 +91,19 @@ export default function BenchmarkListPage() {
         {!loading && files.length === 0 && (
           <div className="flex flex-col items-center justify-center gap-8 h-full text-center">
             <Image
-              src={'/images/diamond_large.svg'}
-              height={240}
-              width={320}
+              src={"/images/diamond_large.svg"}
+              height={120}
+              width={180}
               alt="Start a benchmark"
             />
             <div className="flex flex-col gap-2">
-              <p className="font-bold text-2xl">Benchmarks</p>
-              <p>No saved benchmarks yet</p>
+              <p className="font-bold text-xl">Benchmarks</p>
+              <p className="text-sm">No saved benchmarks yet</p>
             </div>
           </div>
         )}
 
-        {!loading && files.length > 0 && view === 'tile' && (
+        {!loading && files.length > 0 && view === "tile" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {files.map((f) => (
               <TileCard
@@ -119,20 +122,37 @@ export default function BenchmarkListPage() {
                 footer={f.filename}
               >
                 <p className="text-sm p-4 truncate">
-                  {f.configs.join('  |  ')}
+                  {f.configs.join("  |  ")}
                 </p>
               </TileCard>
             ))}
           </div>
         )}
 
-        {!loading && files.length > 0 && view === 'table' && (
+        {!loading && files.length > 0 && view === "table" && (
           <DataTable>
             <DataTableHead>
-              <DataTableHeader className="pr-4" onSort={() => handleSort('collection')} sortDir={sortCol === 'collection' ? sortDir : null}>Collection</DataTableHeader>
-              <DataTableHeader className="pr-4" onSort={() => handleSort('saved_at')} sortDir={sortCol === 'saved_at' ? sortDir : null}>Date</DataTableHeader>
+              <DataTableHeader
+                className="pr-4"
+                onSort={() => handleSort("collection")}
+                sortDir={sortCol === "collection" ? sortDir : null}
+              >
+                Collection
+              </DataTableHeader>
+              <DataTableHeader
+                className="pr-4"
+                onSort={() => handleSort("saved_at")}
+                sortDir={sortCol === "saved_at" ? sortDir : null}
+              >
+                Date
+              </DataTableHeader>
               <DataTableHeader className="pr-4">Configs</DataTableHeader>
-              <DataTableHeader onSort={() => handleSort('filename')} sortDir={sortCol === 'filename' ? sortDir : null}>File</DataTableHeader>
+              <DataTableHeader
+                onSort={() => handleSort("filename")}
+                sortDir={sortCol === "filename" ? sortDir : null}
+              >
+                File
+              </DataTableHeader>
             </DataTableHead>
             <DataTableBody>
               {sortedFiles.map((f) => (
@@ -156,7 +176,7 @@ export default function BenchmarkListPage() {
                     {formatDate(f.saved_at)}
                   </DataTableCell>
                   <DataTableCell className="pr-4 text-neutral-500 truncate max-w-xs">
-                    {f.configs.join(' | ')}
+                    {f.configs.join(" | ")}
                   </DataTableCell>
                   <DataTableCell className="text-neutral-400 text-xs truncate max-w-xs">
                     {f.filename}
