@@ -15,6 +15,7 @@ import ConfigSection from './ConfigSection';
 import NumberField from './NumberField';
 import TextField from './TextField';
 import ComponentSelect, { componentSelectId } from './ComponentSelect';
+import Dropdown from './Dropdown';
 import LatencyBar from './LatencyBar';
 import ChunkCard from './ChunkCard';
 import SemanticScatterplot from './SemanticScatterplot';
@@ -166,19 +167,11 @@ export default function PipelineLab() {
     <>
       <aside className="w-1/2 max-w-sm shrink-0 border-r border-neutral-200 overflow-y-auto flex flex-col text-sm divide-y divide-neutral-200">
         <ConfigSection title="Collection">
-          <select
+          <Dropdown
             value={config.collection}
-            onChange={(e) =>
-              setConfig((c) => ({ ...c, collection: e.target.value }))
-            }
-            className="w-full bg-neutral-200/50 px-4 py-2 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-colors hover:bg-neutral-200 hover:cursor-pointer"
-          >
-            {collections.map((col) => (
-              <option key={col} value={col}>
-                {col}
-              </option>
-            ))}
-          </select>
+            options={collections.map((col) => ({ value: col, label: col }))}
+            onChange={(v) => setConfig((c) => ({ ...c, collection: v }))}
+          />
         </ConfigSection>
 
         <ConfigSection title="Retriever">

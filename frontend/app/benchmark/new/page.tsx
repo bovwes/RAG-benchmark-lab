@@ -14,6 +14,7 @@ import {
   type EvalFileMeta,
 } from '@/lib/api';
 import { componentSelectId } from '@/components/ComponentSelect';
+import Dropdown from '@/components/Dropdown';
 import TextField from '@/components/TextField';
 import Spinner from '@/components/Spinner';
 import BenchmarkRunModal from '@/components/BenchmarkRunModal';
@@ -106,23 +107,17 @@ function InlineSelect({
   loading: boolean;
   onChange: (v: string) => void;
 }) {
+  const options = loading
+    ? [{ value: '', label: 'Loading…' }]
+    : components.map((c) => ({ value: componentSelectId(c), label: c.name }));
+
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
+    <Dropdown
+      value={loading ? '' : value}
+      options={options}
+      onChange={onChange}
       disabled={loading}
-      className="w-full bg-transparent text-sm focus:outline-none hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-200/50 p-2"
-    >
-      {loading ? (
-        <option value="">Loading…</option>
-      ) : (
-        components.map((c) => (
-          <option key={componentSelectId(c)} value={componentSelectId(c)}>
-            {c.name}
-          </option>
-        ))
-      )}
-    </select>
+    />
   );
 }
 
@@ -282,21 +277,6 @@ export default function NewBenchmarkPage() {
           <ArrowLeftIcon className="size-5" />
         </Link>
         <p className="text-base font-bold">New Benchmark</p>
-        <div className="ml-auto flex items-center gap-2 pr-3">
-          <button
-            onClick={handleRun}
-            disabled={
-              loading ||
-              componentsLoading ||
-              !evalDatasetPath.trim() ||
-              configs.length === 0
-            }
-            className="flex items-center gap-2 text-sm font-medium px-4 py-2 bg-black text-white hover:underline disabled:bg-neutral-300 disabled:cursor-not-allowed hover:cursor-pointer transition-colors"
-          >
-            {loading && <Spinner />}
-            {loading ? 'Running…' : 'Start'}
-          </button>
-        </div>
       </div>
 
       {/* Body */}
@@ -305,37 +285,32 @@ export default function NewBenchmarkPage() {
         <aside className="w-lg border-r border-neutral-200 overflow-y-auto flex flex-col divide-y divide-neutral-200 text-sm">
           <div className="flex items-center justify-between p-4">
             <span className="text-neutral-500">Eval dataset</span>
-            <select
-              value={evalDatasetPath}
-              onChange={(e) => setEvalDatasetPath(e.target.value)}
-              disabled={evalFiles.length === 0}
-              className="bg-neutral-200/50 focus:outline-none hover:bg-neutral-200 hover:cursor-pointer text-sm truncate disabled:opacity-50 disabled:cursor-not-allowed p-2 w-fit text-left"
-            >
-              {evalFiles.length === 0 ? (
-                <option value="">No eval files found</option>
-              ) : (
-                evalFiles.map((f) => (
-                  <option key={f.filename} value={`evaluation/${f.filename}`}>
-                    {f.filename} ({f.question_count}q)
-                  </option>
-                ))
-              )}
-            </select>
+            <div className="w-2/3">
+              <Dropdown
+                value={evalDatasetPath}
+                options={
+                  evalFiles.length === 0
+                    ? [{ value: '', label: 'No eval files found' }]
+                    : evalFiles.map((f) => ({
+                        value: `evaluation/${f.filename}`,
+                        label: `${f.filename} (${f.question_count}q)`,
+                      }))
+                }
+                onChange={setEvalDatasetPath}
+                disabled={evalFiles.length === 0}
+              />
+            </div>
           </div>
 
           <div className="flex items-center justify-between p-4">
             <span className="text-neutral-500">Collection</span>
-            <select
-              value={collection}
-              onChange={(e) => setCollection(e.target.value)}
-              className="bg-neutral-200/50 text-left hover:bg-neutral-200 focus:outline-none hover:bg-neutral-50 hover:cursor-pointer text-sm max-w-[110px] truncate p-2 w-fit"
-            >
-              {collections.map((col) => (
-                <option key={col} value={col}>
-                  {col}
-                </option>
-              ))}
-            </select>
+            <div className="w-2/3">
+              <Dropdown
+                value={collection}
+                options={collections.map((col) => ({ value: col, label: col }))}
+                onChange={setCollection}
+              />
+            </div>
           </div>
 
           <div className="flex items-center justify-between p-4">
@@ -374,6 +349,21 @@ export default function NewBenchmarkPage() {
               <p className="break-words">{error}</p>
             </div>
           )}
+          <div className="flex flex-col mt-auto p-4 gap-2">
+            <button
+              onClick={handleRun}
+              disabled={
+                loading ||
+                componentsLoading ||
+                !evalDatasetPath.trim() ||
+                configs.length === 0
+              }
+              className="flex w-full items-center justify-center gap-2 text-sm px-4 py-3 bg-black text-white hover:underline disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed hover:cursor-pointer"
+            >
+              {loading && <Spinner />}
+              {loading ? 'Running…' : 'Start'}
+            </button>
+          </div>
         </aside>
 
         {/* Right: config table */}

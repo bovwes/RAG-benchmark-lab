@@ -12,10 +12,12 @@ export default function Dropdown<T extends string = string>({
   value,
   options,
   onChange,
+  disabled,
 }: {
   value: T;
   options: DropdownOption<T>[];
   onChange: (value: T) => void;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -34,9 +36,10 @@ export default function Dropdown<T extends string = string>({
   const current = options.find((o) => o.value === value);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="w-full relative">
       <button
         type="button"
+        disabled={disabled}
         onClick={() => setOpen((o) => !o)}
         className={`border focus:outline-none hover:bg-neutral-200 hover:cursor-pointer text-sm truncate disabled:opacity-50 disabled:cursor-not-allowed p-2 flex items-center w-full justify-between text-left bg-neutral-200/50 ${open ? 'border-black' : 'border-neutral-200/50'}`}
       >
@@ -46,7 +49,7 @@ export default function Dropdown<T extends string = string>({
         />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-10 bg-white border-x border-b border-black min-w-full">
+        <div className="absolute right-0 top-full z-10 bg-white border-x border-b border-black min-w-full max-w-full">
           {options.map((opt) => (
             <button
               key={opt.value}
@@ -55,7 +58,7 @@ export default function Dropdown<T extends string = string>({
                 onChange(opt.value);
                 setOpen(false);
               }}
-              className={`w-full text-left px-3 py-2 text-xs hover:bg-neutral-100 hover:cursor-pointer transition-colors flex items-center gap-1.5 ${
+              className={`w-full text-left px-3 py-2 text-xs hover:bg-neutral-100 hover:cursor-pointer transition-colors flex items-center gap-1.5 truncate ${
                 opt.value === value ? 'font-medium' : 'text-neutral-500'
               }`}
             >
