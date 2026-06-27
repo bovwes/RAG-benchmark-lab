@@ -8,7 +8,7 @@
 config.yaml
 results.json
 
-dev/
-chroma_db/
-evaluation/
-benchmarks/
+/dev/
+/chroma_db/
+/evaluation/
+/benchmarks/
