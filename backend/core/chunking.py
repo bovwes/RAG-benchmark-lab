@@ -26,6 +26,7 @@ def apply_chunking(
     chunk_size: int,
     overlap: int,
     separators: list[str] = DEFAULT_SEPARATORS,
+    keep_separator: bool = False,
 ) -> list[str]:
     if strategy == "recursive_char":
         splitter = RecursiveCharacterTextSplitter(
@@ -33,6 +34,7 @@ def apply_chunking(
             chunk_size=chunk_size,
             chunk_overlap=overlap,
             length_function=len,
+            keep_separator=keep_separator,
         )
     else:
         splitter = CharacterTextSplitter(
@@ -50,6 +52,7 @@ def preview_chunks(
     chunk_size: int,
     overlap: int,
     separators: list[str] = DEFAULT_SEPARATORS,
+    keep_separator: bool = False,
 ) -> list[ChunkInfo]:
-    raw = apply_chunking(text, strategy, chunk_size, overlap, separators)
+    raw = apply_chunking(text, strategy, chunk_size, overlap, separators, keep_separator)
     return [ChunkInfo(index=i, text=c) for i, c in enumerate(raw)]

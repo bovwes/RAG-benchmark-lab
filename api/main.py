@@ -88,6 +88,7 @@ class IngestRequest(BaseModel):
     overwrite: bool = False
     strategy: rb.ChunkStrategy = "char"
     separators: list[str] = ["\n\n", "\n", ". ", " ", ""]
+    keep_separator: bool = False
 
 
 class ChunkPreviewRequest(BaseModel):
@@ -96,6 +97,7 @@ class ChunkPreviewRequest(BaseModel):
     chunk_size: int = 512
     chunk_overlap: int = 64
     separators: list[str] = ["\n\n", "\n", ". ", " ", ""]
+    keep_separator: bool = False
 
 
 class ChunkPreviewChunk(BaseModel):
@@ -190,7 +192,7 @@ def _read_file(path: Path) -> str:
 
 @app.post("/api/chunk-preview", response_model=ChunkPreviewResponse)
 def chunk_preview(req: ChunkPreviewRequest):
-    infos = rb.preview_chunks(req.text, req.strategy, req.chunk_size, req.chunk_overlap, req.separators)
+    infos = rb.preview_chunks(req.text, req.strategy, req.chunk_size, req.chunk_overlap, req.separators, req.keep_separator)
     if not infos:
         return ChunkPreviewResponse(chunks=[], total_chunks=0, avg_chunk_size=0.0, min_chunk_size=0, max_chunk_size=0)
     sizes = [c.char_count for c in infos]
@@ -249,7 +251,7 @@ def ingest_folder(req: IngestRequest):
             text = _read_file(file)
         except Exception:
             continue
-        for chunk in rb.apply_chunking(text, req.strategy, req.chunk_size, req.chunk_overlap, req.separators):
+        for chunk in rb.apply_chunking(text, req.strategy, req.chunk_size, req.chunk_overlap, req.separators, req.keep_separator):
             all_chunks.append(chunk)
             all_ids.append(str(uuid.uuid4()))
             all_metas.append({"source": file.name, "page": 0})

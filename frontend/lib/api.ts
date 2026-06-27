@@ -66,6 +66,7 @@ export interface IngestRequest {
   overwrite: boolean;
   strategy: ChunkStrategy;
   separators: string[];
+  keep_separator: boolean;
 }
 
 export interface ChunkPreviewRequest {
@@ -74,6 +75,7 @@ export interface ChunkPreviewRequest {
   chunk_size: number;
   chunk_overlap: number;
   separators: string[];
+  keep_separator: boolean;
 }
 
 export interface ChunkPreviewChunk {

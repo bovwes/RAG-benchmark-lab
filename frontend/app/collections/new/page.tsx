@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeftIcon, ArrowPathIcon } from '@heroicons/react/16/solid';
+import {
+  ArrowLeftIcon,
+  ArrowPathIcon,
+  ArrowUpRightIcon,
+} from '@heroicons/react/16/solid';
 import {
   ingestFolder,
   chunkPreview,
@@ -63,6 +67,7 @@ export default function NewCollectionPage() {
   const [separators, setSeparators] = useState<string[]>([
     ...DEFAULT_SEPARATORS,
   ]);
+  const [keepSeparator, setKeepSeparator] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,6 +102,7 @@ export default function NewCollectionPage() {
       size: number,
       overlap: number,
       seps: string[],
+      keepSep: boolean,
     ) => {
       if (previewDebounce.current) clearTimeout(previewDebounce.current);
       if (!text.trim()) {
@@ -113,6 +119,7 @@ export default function NewCollectionPage() {
             chunk_size: size,
             chunk_overlap: overlap,
             separators: seps,
+            keep_separator: keepSep,
           });
           setPreviewChunks(res.chunks);
           setPreviewStats({
@@ -133,8 +140,23 @@ export default function NewCollectionPage() {
   );
 
   useEffect(() => {
-    runPreview(previewText, strategy, chunkSize, chunkOverlap, separators);
-  }, [previewText, strategy, chunkSize, chunkOverlap, separators, runPreview]);
+    runPreview(
+      previewText,
+      strategy,
+      chunkSize,
+      chunkOverlap,
+      separators,
+      keepSeparator,
+    );
+  }, [
+    previewText,
+    strategy,
+    chunkSize,
+    chunkOverlap,
+    separators,
+    keepSeparator,
+    runPreview,
+  ]);
 
   useEffect(() => {
     if (sampleDebounce.current) clearTimeout(sampleDebounce.current);
@@ -180,6 +202,7 @@ export default function NewCollectionPage() {
         overwrite: true,
         strategy,
         separators,
+        keep_separator: keepSeparator,
       });
       router.push('/collections');
     } catch (e) {
@@ -279,26 +302,56 @@ export default function NewCollectionPage() {
                 step={16}
                 onChange={setChunkOverlap}
               />
+              <Link
+                href="https://reference.langchain.com/python/langchain-text-splitters"
+                target="_blank"
+                className="px-2 mt-2 text-xs justify-end text-neutral-400 hover:underline hover:text-neutral-500 flex gap-1 items-center"
+              >
+                Reference <ArrowUpRightIcon className="size-4" />
+              </Link>
             </div>
           </div>
           {strategy === 'recursive_char' && (
-            <div className="flex items-center justify-between p-4">
-              <span className="text-neutral-500">Separators</span>
-              <div className="w-2/3">
-                <MultiSelect
-                  values={separators}
-                  options={SEPARATOR_OPTIONS}
-                  onChange={setSeparators}
-                  placeholder="None selected"
-                  allowCustom
-                  customPlaceholder="\n or any string"
-                  formatCustom={(raw) => {
-                    const val = parseSep(raw);
-                    return { value: val, label: displaySep(val) };
-                  }}
-                />
+            <>
+              <div className="flex items-center justify-between p-4">
+                <span className="text-neutral-500">Separators</span>
+                <div className="w-2/3">
+                  <MultiSelect
+                    values={separators}
+                    options={SEPARATOR_OPTIONS}
+                    onChange={setSeparators}
+                    placeholder="None selected"
+                    allowCustom
+                    customPlaceholder="\n or any string"
+                    formatCustom={(raw) => {
+                      const val = parseSep(raw);
+                      return { value: val, label: displaySep(val) };
+                    }}
+                  />
+                </div>
               </div>
-            </div>
+
+              <div className="flex items-center justify-between p-4">
+                <span
+                  className={`${keepSeparator ? 'text-neutral-500' : 'text-neutral-300'}`}
+                >
+                  Keep separator
+                </span>
+                <div className=" flex items-center justify-end">
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={keepSeparator}
+                    onClick={() => setKeepSeparator((v) => !v)}
+                    className={`relative inline-flex h-7 w-13 shrink-0 items-center rounded-full transition-colors duration-200 hover:cursor-pointer focus:outline-none ${keepSeparator ? 'bg-salmon' : 'bg-neutral-200'}`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${keepSeparator ? 'translate-x-7' : 'translate-x-1'}`}
+                    />
+                  </button>
+                </div>
+              </div>
+            </>
           )}
 
           <div className="flex flex-col mt-auto p-4 gap-2">
