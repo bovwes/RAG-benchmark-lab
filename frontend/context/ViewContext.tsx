@@ -6,10 +6,10 @@ import type { ViewMode } from '@/components/ViewToggle';
 const ViewContext = createContext<{
   view: ViewMode;
   setView: (v: ViewMode) => void;
-}>({ view: 'tile', setView: () => {} });
+}>({ view: 'table', setView: () => {} });
 
 export function ViewProvider({ children }: { children: React.ReactNode }) {
-  const [view, setView] = useState<ViewMode>('tile');
+  const [view, setView] = useState<ViewMode>('table');
   return (
     <ViewContext.Provider value={{ view, setView }}>
       {children}

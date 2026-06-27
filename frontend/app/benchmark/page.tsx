@@ -32,10 +32,28 @@ function formatDate(iso: string): string {
   }
 }
 
+type SortCol = 'collection' | 'saved_at' | 'filename';
+
 export default function BenchmarkListPage() {
   const [files, setFiles] = useState<BenchmarkFileMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const { view, setView } = useView();
+  const [sortCol, setSortCol] = useState<SortCol | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  function handleSort(col: SortCol) {
+    if (sortCol === col) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    else { setSortCol(col); setSortDir('asc'); }
+  }
+
+  const sortedFiles = sortCol
+    ? [...files].sort((a, b) => {
+        const av = a[sortCol];
+        const bv = b[sortCol];
+        const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+        return sortDir === 'asc' ? cmp : -cmp;
+      })
+    : files;
 
   useEffect(() => {
     listBenchmarks()
@@ -111,15 +129,22 @@ export default function BenchmarkListPage() {
         {!loading && files.length > 0 && view === 'table' && (
           <DataTable>
             <DataTableHead>
-              <DataTableHeader className="pr-4">Collection</DataTableHeader>
-              <DataTableHeader className="pr-4">Date</DataTableHeader>
+              <DataTableHeader className="pr-4" onSort={() => handleSort('collection')} sortDir={sortCol === 'collection' ? sortDir : null}>Collection</DataTableHeader>
+              <DataTableHeader className="pr-4" onSort={() => handleSort('saved_at')} sortDir={sortCol === 'saved_at' ? sortDir : null}>Date</DataTableHeader>
               <DataTableHeader className="pr-4">Configs</DataTableHeader>
-              <DataTableHeader>File</DataTableHeader>
+              <DataTableHeader onSort={() => handleSort('filename')} sortDir={sortCol === 'filename' ? sortDir : null}>File</DataTableHeader>
             </DataTableHead>
             <DataTableBody>
-              {files.map((f) => (
+              {sortedFiles.map((f) => (
                 <DataTableRow key={f.filename}>
-                  <DataTableCell className="pr-4">
+                  <DataTableCell className="pr-4 flex gap-3 items-center">
+                    <Image
+                      src="images/diamond.svg"
+                      alt=""
+                      width={24}
+                      height={24}
+                      className="shrink-0"
+                    />
                     <Link
                       href={`/benchmark/${encodeURIComponent(f.filename)}`}
                       className="font-medium underline-offset-4 underline"

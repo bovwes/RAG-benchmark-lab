@@ -1,4 +1,9 @@
 import { type ReactNode } from 'react';
+import {
+  ChevronUpDownIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+} from '@heroicons/react/16/solid';
 
 export function DataTable({ children }: { children: ReactNode }) {
   return <table className="w-full text-sm border-collapse">{children}</table>;
@@ -26,9 +31,7 @@ export function DataTableRow({
   className?: string;
 }) {
   return (
-    <tr
-      className={`border-b border-neutral-100 ${className ? ` ${className}` : ''}`}
-    >
+    <tr className={`even:bg-neutral-100 ${className ? ` ${className}` : ''}`}>
       {children}
     </tr>
   );
@@ -37,13 +40,37 @@ export function DataTableRow({
 export function DataTableHeader({
   children,
   className,
+  sortDir,
+  onSort,
 }: {
   children: ReactNode;
   className?: string;
+  sortDir?: 'asc' | 'desc' | null;
+  onSort?: () => void;
 }) {
+  const SortIcon =
+    sortDir === 'asc'
+      ? ChevronUpIcon
+      : sortDir === 'desc'
+        ? ChevronDownIcon
+        : ChevronUpDownIcon;
+
   return (
-    <th className={`py-2 font-medium${className ? ` ${className}` : ''}`}>
-      {children}
+    <th className={`px-1 pb-2 font-medium${className ? ` ${className}` : ''}`}>
+      {onSort ? (
+        <button
+          onClick={onSort}
+          className={`p-1 flex items-center gap-2 hover:text-black hover:bg-neutral-100 hover:cursor-pointer transition-colors ${sortDir ? 'text-black' : 'text-neutral-400'}`}
+        >
+          {children}
+
+          <SortIcon
+            className={`size-4 shrink-0 ${sortDir ? 'text-black' : 'text-neutral-400'}`}
+          />
+        </button>
+      ) : (
+        children
+      )}
     </th>
   );
 }
@@ -56,6 +83,6 @@ export function DataTableCell({
   className?: string;
 }) {
   return (
-    <td className={`py-2${className ? ` ${className}` : ''}`}>{children}</td>
+    <td className={`p-2 ${className ? ` ${className}` : ''}`}>{children}</td>
   );
 }
