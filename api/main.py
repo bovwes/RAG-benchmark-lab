@@ -623,6 +623,39 @@ def get_evaluation_file(filename: str):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+@app.get("/api/browse-dirs")
+def browse_dirs(path: str = ""):
+    if not path:
+        if os.name == "nt":
+            import string
+            drives = [f"{d}:\\" for d in string.ascii_uppercase if Path(f"{d}:\\").exists()]
+            return {"path": "", "parent": None, "dirs": drives}
+        path = "/"
+    target = Path(path)
+    if not target.is_dir():
+        raise HTTPException(status_code=400, detail="Not a directory")
+    try:
+        entries = list(target.iterdir())
+        subdirs = sorted(
+            [str(target / d.name) for d in entries if d.is_dir()],
+            key=str.lower,
+        )
+        files = sorted(
+            [str(target / f.name) for f in entries if f.is_file()],
+            key=str.lower,
+        )
+    except PermissionError:
+        subdirs = []
+        files = []
+    parent = str(target.parent) if str(target.parent) != str(target) else None
+    return {"path": str(target), "parent": parent, "dirs": subdirs, "files": files}
+
+
+@app.get("/api/browse-dirs/default")
+def browse_dirs_default():
+    return {"path": PROJECT_ROOT}
+
+
 @app.get("/api/benchmarks/{filename}")
 def get_benchmark(filename: str):
     if "/" in filename or "\\" in filename or ".." in filename:

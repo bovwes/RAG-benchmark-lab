@@ -321,6 +321,25 @@ export interface EvalQuestion {
   contexts: string[];
 }
 
+export async function browseDirs(
+  path: string,
+): Promise<{ path: string; parent: string | null; dirs: string[]; files: string[] }> {
+  const params = new URLSearchParams({ path });
+  const res = await fetch(`${API_URL}/api/browse-dirs?${params}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error((err as { detail?: string }).detail ?? 'Browse failed');
+  }
+  return res.json() as Promise<{ path: string; parent: string | null; dirs: string[]; files: string[] }>;
+}
+
+export async function getDefaultBrowsePath(): Promise<string> {
+  const res = await fetch(`${API_URL}/api/browse-dirs/default`);
+  if (!res.ok) return '';
+  const data = (await res.json()) as { path: string };
+  return data.path;
+}
+
 export async function listEvaluationFiles(): Promise<EvalFileMeta[]> {
   const res = await fetch(`${API_URL}/api/evaluation`);
   if (!res.ok) throw new Error('Could not list evaluation files');
