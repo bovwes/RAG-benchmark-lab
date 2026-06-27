@@ -19,6 +19,7 @@ import TextField from '@/components/TextField';
 import Spinner from '@/components/Spinner';
 import BenchmarkRunModal from '@/components/BenchmarkRunModal';
 import { ArrowLeftIcon, XMarkIcon, PlusIcon } from '@heroicons/react/16/solid';
+import ErrorBanner from '@/components/ErrorBanner';
 
 interface ConfigFormState {
   name: string;
@@ -343,13 +344,8 @@ export default function NewBenchmarkPage() {
             </div>
           )}
 
-          {error && (
-            <div className="p-4 text-sm text-red-600">
-              <p className="font-semibold mb-1">Error</p>
-              <p className="break-words">{error}</p>
-            </div>
-          )}
           <div className="flex flex-col mt-auto p-4 gap-2">
+            {error && <ErrorBanner>{error}</ErrorBanner>}
             <button
               onClick={handleRun}
               disabled={
