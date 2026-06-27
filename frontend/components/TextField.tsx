@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { PencilSquareIcon } from '@heroicons/react/16/solid';
 import { createPortal } from 'react-dom';
+import Image from 'next/image';
 
 export default function TextField({
   label,
@@ -49,7 +50,13 @@ export default function TextField({
       >
         <span className="text-sm text-neutral-500 select-none">{label}</span>
 
-        <PencilSquareIcon className="size-5 text-salmon" />
+        <Image
+          src="/images/pencil.svg"
+          height={24}
+          width={24}
+          alt="Text"
+          className="shrink-0"
+        />
       </button>
 
       {open &&
@@ -57,10 +64,15 @@ export default function TextField({
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/30" onClick={cancel} />
             <div className="relative bg-white shadow-xl w-full max-w-lg mx-4 flex flex-col">
-              <div className="px-4 py-3 border-b border-neutral-200">
-                <span className="text-sm font-medium text-neutral-700">
-                  {label}
-                </span>
+              <div className="px-4 py-3 border-b border-neutral-200 flex gap-3 items-center">
+                <Image
+                  src="/images/pencil.svg"
+                  height={32}
+                  width={32}
+                  alt="Text"
+                  className="shrink-0"
+                />
+                <span className="text-sm font-medium">{label}</span>
               </div>
               <div className="p-4">
                 <textarea
@@ -69,19 +81,19 @@ export default function TextField({
                   onChange={(e) => setDraft(e.target.value)}
                   rows={10}
                   spellCheck={false}
-                  className="w-full bg-neutral-100 px-3 py-2 text-xs font-mono leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                  className="w-full bg-neutral-100 px-3 py-2 text-xs leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-black"
                 />
               </div>
               <div className="px-4 py-3 border-t border-neutral-200 flex justify-end gap-2">
                 <button
                   onClick={cancel}
-                  className="px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 focus:outline-none"
+                  className="px-3 py-1.5 text-sm text-neutral-500 hover:bg-neutral-100 focus:outline-none hover:cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={save}
-                  className="px-3 py-1.5 text-sm bg-black text-white focus:outline-none"
+                  className="px-3 py-1.5 text-sm bg-black text-white focus:outline-none hover:underline hover:cursor-pointer"
                 >
                   Save
                 </button>
