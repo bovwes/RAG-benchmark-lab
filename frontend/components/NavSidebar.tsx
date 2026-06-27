@@ -34,7 +34,7 @@ export default function NavSidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="w-3xs shrink-0 flex flex-col overflow-y-auto border-r border-neutral-200 bg-neutral-50">
+    <div className="w-fit lg:w-3xs shrink-0 flex flex-col overflow-y-auto border-r border-neutral-200 bg-neutral-50">
       <div className="h-4 grid grid-cols-5">
         <div className="bg-[#264653]" />
         <div className="bg-[#2A9D8F]" />
@@ -42,10 +42,12 @@ export default function NavSidebar() {
         <div className="bg-[#F4A261]" />
         <div className="bg-[#E76F51]" />
       </div>
-      <nav className="py-3 flex flex-col gap-4 ">
+      <nav className="py-3 flex flex-col lg:gap-4 ">
         {navGroups.map(({ label, items }) => (
           <div key={label} className="flex flex-col gap-0.5">
-            <div className="px-14 py-1 text-xs text-neutral-400">{label}</div>
+            <div className="hidden lg:flex px-14 py-1 text-xs text-neutral-400">
+              {label}
+            </div>
             {items.map(({ href, label: itemLabel, Icon }) => {
               const active =
                 pathname === href || pathname.startsWith(href + '/');
@@ -72,7 +74,7 @@ export default function NavSidebar() {
                     height={20}
                     className="w-8 h-8 object-cover"
                   />
-                  {itemLabel}
+                  <span className="hidden lg:flex">{itemLabel}</span>
                 </Link>
               );
             })}
