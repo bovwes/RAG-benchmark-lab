@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 
 const mdComponents: React.ComponentProps<typeof ReactMarkdown>['components'] = {
@@ -49,14 +50,28 @@ interface ChatExchangeProps {
 export default function ChatExchange({ query, answer }: ChatExchangeProps) {
   return (
     <div className="text-sm leading-relaxed gap-2 flex flex-col w-full">
-      <div className="bg-neutral-200/50 p-4 w-full">
-        <div className="bg-salmon w-fit px-1 text-white mb-2">
-          <p className="font-bold">User</p>
+      <div className="p-4 w-full flex justify-end">
+        <div className="max-w-sm text-wrap">
+          <div className="flex items-center gap-3 mb-2 w-fit ml-auto">
+            <Image
+              src="/images/user.svg"
+              height={34}
+              width={34}
+              alt="User query"
+            />
+            <p className="font-bold">User</p>
+          </div>
+          <p className="bg-neutral-200/50 py-2 px-3 text-wrap">{query}</p>
         </div>
-        <p className="max-w-2xl">{query}</p>
       </div>
       <div className="p-4 w-full">
-        <div className="bg-ocean w-fit px-1 text-white mb-2">
+        <div className="flex items-center gap-3 w-fit mb-2">
+          <Image
+            src="/images/agent.svg"
+            height={34}
+            width={34}
+            alt="Agent response"
+          />
           <p className="font-bold">Assistant</p>
         </div>
         <div className="max-w-2xl">
