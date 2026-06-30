@@ -120,6 +120,11 @@ class IngestResponse(BaseModel):
     chunks_added: int
 
 
+class HistoryMessage(BaseModel):
+    query: str
+    answer: str
+
+
 class RunRequest(BaseModel):
     query: str
     collection: str = "documents"
@@ -129,6 +134,7 @@ class RunRequest(BaseModel):
     generator_params: dict[str, Any] = {}
     top_k_retrieve: int = 10
     top_k_rerank: int = 5
+    history: list[HistoryMessage] = []
 
 
 class ChunkOut(BaseModel):
@@ -155,6 +161,7 @@ class RunResponse(BaseModel):
     pipeline_name: str
     query_x: float = 0.0
     query_y: float = 0.0
+    retrieval_query: str = ""
 
 
 class BenchConfigSpec(BaseModel):
@@ -329,7 +336,8 @@ def run_pipeline(req: RunRequest):
         top_k_rerank=req.top_k_rerank,
     )
 
-    result = rb.RAGPipeline(config).run(req.query)
+    history = [{"query": m.query, "answer": m.answer} for m in req.history]
+    result = rb.RAGPipeline(config).run(req.query, history=history)
 
     chunks_out = [
         ChunkOut(text=c.text, source=c.source, page=c.page, score=round(c.score, 4))
@@ -396,6 +404,7 @@ def run_pipeline(req: RunRequest):
         pipeline_name=config.name,
         query_x=query_x,
         query_y=query_y,
+        retrieval_query=result.retrieval_query,
     )
 
 

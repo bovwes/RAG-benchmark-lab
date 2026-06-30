@@ -1,7 +1,7 @@
-import Image from "next/image";
-import ReactMarkdown from "react-markdown";
+import Image from 'next/image';
+import ReactMarkdown from 'react-markdown';
 
-const mdComponents: React.ComponentProps<typeof ReactMarkdown>["components"] = {
+const mdComponents: React.ComponentProps<typeof ReactMarkdown>['components'] = {
   p: ({ children }) => (
     <p className="mb-3 last:mb-0 leading-relaxed">{children}</p>
   ),
@@ -45,9 +45,15 @@ const mdComponents: React.ComponentProps<typeof ReactMarkdown>["components"] = {
 interface ChatExchangeProps {
   query: string;
   answer: string;
+  loading?: boolean;
+  retrieval_query?: string;
 }
 
-export default function ChatExchange({ query, answer }: ChatExchangeProps) {
+export default function ChatExchange({
+  query,
+  answer,
+  loading,
+}: ChatExchangeProps) {
   return (
     <div className="text-sm leading-relaxed gap-2 flex flex-col w-full">
       <div className="w-full flex justify-end">
@@ -61,7 +67,9 @@ export default function ChatExchange({ query, answer }: ChatExchangeProps) {
             />
             <p className="font-bold">User</p>
           </div>
-          <p className="bg-neutral-200/50 py-2 px-3 text-wrap">{query}</p>
+          <div className="bg-neutral-200/50 py-2 px-3 text-wrap">
+            <p>{query}</p>
+          </div>
         </div>
       </div>
       <div className="w-full">
@@ -74,9 +82,15 @@ export default function ChatExchange({ query, answer }: ChatExchangeProps) {
           />
           <p className="font-bold">Assistant</p>
         </div>
-        <div className="max-w-2xl">
-          <ReactMarkdown components={mdComponents}>{answer}</ReactMarkdown>
-        </div>
+        {loading ? (
+          <div className="flex items-center gap-2 text-neutral-400 text-sm">
+            Thinking…
+          </div>
+        ) : (
+          <div className="max-w-2xl">
+            <ReactMarkdown components={mdComponents}>{answer}</ReactMarkdown>
+          </div>
+        )}
       </div>
     </div>
   );

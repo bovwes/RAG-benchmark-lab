@@ -1,5 +1,5 @@
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 from .types import RetrievedChunk
@@ -32,6 +32,7 @@ class PipelineResult:
     retrieve_latency_ms: float
     generate_latency_ms: float
     rerank_latency_ms: float = 0.0
+    retrieval_query: str = ""
 
     @property
     def total_latency_ms(self) -> float:
@@ -42,24 +43,30 @@ class RAGPipeline:
     def __init__(self, config: PipelineConfig):
         self.config = config
 
-    def run(self, question: str) -> PipelineResult:
+    def run(self, question: str, history: list[dict] | None = None) -> PipelineResult:
         cfg = self.config
-        
+        history = history or []
+
+        # If this is a multi-turn query, rewrite the last query to contain relevant background information
+        retrieval_query = (
+            cfg.generator.rewrite_query(question, history) if history else question
+        )
+
         # Retriever
         t0 = time.perf_counter()
-        chunks = cfg.retriever.retrieve(question, cfg.top_k_retrieve)
+        chunks = cfg.retriever.retrieve(retrieval_query, cfg.top_k_retrieve)
         retrieve_ms = (time.perf_counter() - t0) * 1000
 
         # Reranker (NoReranker is a valid reranker that just truncates)
         rerank_ms = 0.0
         if cfg.reranker is not None:
             t1 = time.perf_counter()
-            chunks = cfg.reranker.rerank(question, chunks, cfg.top_k_rerank)
+            chunks = cfg.reranker.rerank(retrieval_query, chunks, cfg.top_k_rerank)
             rerank_ms = (time.perf_counter() - t1) * 1000
 
         # LLM
         t2 = time.perf_counter()
-        answer = cfg.generator.generate(question, chunks)
+        answer = cfg.generator.generate(question, chunks, history=history)
         generate_ms = (time.perf_counter() - t2) * 1000
 
         return PipelineResult(
@@ -69,4 +76,5 @@ class RAGPipeline:
             retrieve_latency_ms=retrieve_ms,
             rerank_latency_ms=rerank_ms,
             generate_latency_ms=generate_ms,
+            retrieval_query=retrieval_query if retrieval_query != question else "",
         )

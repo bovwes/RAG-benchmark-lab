@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from 'react';
 import {
   runPipeline,
   getCollections,
@@ -9,25 +9,25 @@ import {
   type RunRequest,
   type ComponentCategory,
   type ComponentInfo,
-} from "@/lib/api";
-import PanelHeader from "./PanelHeader";
-import ConfigSection from "./ConfigSection";
-import NumberField from "./NumberField";
-import TextField from "./TextField";
-import ComponentSelect, { componentSelectId } from "./ComponentSelect";
-import Dropdown from "./Dropdown";
-import LatencyBar from "./LatencyBar";
-import ChunkCard from "./ChunkCard";
-import SemanticScatterplot from "./SemanticScatterplot";
-import Spinner from "./Spinner";
+} from '@/lib/api';
+import PanelHeader from './PanelHeader';
+import ConfigSection from './ConfigSection';
+import NumberField from './NumberField';
+import TextField from './TextField';
+import ComponentSelect, { componentSelectId } from './ComponentSelect';
+import Dropdown from './Dropdown';
+import LatencyBar from './LatencyBar';
+import ChunkCard from './ChunkCard';
+import SemanticScatterplot from './SemanticScatterplot';
+import Spinner from './Spinner';
 import {
   ArrowUpIcon,
-  ArrowUpRightIcon,
   ChartBarIcon,
   DocumentTextIcon,
-} from "@heroicons/react/16/solid";
-import ChatExchange from "./ChatExchange";
-import Image from "next/image";
+  XMarkIcon,
+} from '@heroicons/react/16/solid';
+import ChatExchange from './ChatExchange';
+import Image from 'next/image';
 
 interface Config {
   retriever: string;
@@ -39,6 +39,13 @@ interface Config {
   collection: string;
 }
 
+interface Message {
+  id: number;
+  query: string;
+  result: RunResult | null;
+  error: string | null;
+}
+
 function defaultParamsFor(
   component: ComponentInfo,
 ): Record<string, string | number> {
@@ -46,7 +53,7 @@ function defaultParamsFor(
   for (const p of component.parameters) {
     if (p.required || p.default === null) continue;
     out[p.name] =
-      typeof p.default === "string" || typeof p.default === "number"
+      typeof p.default === 'string' || typeof p.default === 'number'
         ? p.default
         : String(p.default);
   }
@@ -55,37 +62,40 @@ function defaultParamsFor(
 
 export default function PipelineLab() {
   const [config, setConfig] = useState<Config>({
-    retriever: "",
-    reranker: "",
-    generator: "",
+    retriever: '',
+    reranker: '',
+    generator: '',
     generatorParams: {},
     topKRetrieve: 10,
     topKRerank: 5,
-    collection: "documents",
+    collection: 'documents',
   });
-  const [query, setQuery] = useState("");
-  const [result, setResult] = useState<RunResult | null>(null);
+  const [query, setQuery] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [collections, setCollections] = useState<string[]>(["documents"]);
-  const [expandedChunks, setExpandedChunks] = useState<Set<number>>(new Set());
-  const [hasQueried, setHasQueried] = useState(false);
-  const [activePanel, setActivePanel] = useState<"latency" | "chunks" | null>(
-    null,
-  );
+  const [expandedChunks, setExpandedChunks] = useState<
+    Record<number, Set<number>>
+  >({});
+  const [activePanel, setActivePanel] = useState<{
+    id: number;
+    panel: 'latency' | 'context';
+  } | null>(null);
+  const [collections, setCollections] = useState<string[]>(['documents']);
   const [componentCategories, setComponentCategories] = useState<
     ComponentCategory[]
   >([]);
   const [componentsLoading, setComponentsLoading] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const retrievers =
-    componentCategories.find((c) => c.category === "retrievers")?.components ??
+    componentCategories.find((c) => c.category === 'retrievers')?.components ??
     [];
   const rerankers =
-    componentCategories.find((c) => c.category === "rerankers")?.components ??
+    componentCategories.find((c) => c.category === 'rerankers')?.components ??
     [];
   const generators =
-    componentCategories.find((c) => c.category === "generators")?.components ??
+    componentCategories.find((c) => c.category === 'generators')?.components ??
     [];
 
   useEffect(() => {
@@ -98,11 +108,11 @@ export default function PipelineLab() {
     getComponents()
       .then((cats) => {
         setComponentCategories(cats);
-        const firstRetriever = cats.find((c) => c.category === "retrievers")
+        const firstRetriever = cats.find((c) => c.category === 'retrievers')
           ?.components[0];
-        const firstReranker = cats.find((c) => c.category === "rerankers")
+        const firstReranker = cats.find((c) => c.category === 'rerankers')
           ?.components[0];
-        const firstGenerator = cats.find((c) => c.category === "generators")
+        const firstGenerator = cats.find((c) => c.category === 'generators')
           ?.components[0];
         setConfig((prev) => ({
           ...prev,
@@ -124,6 +134,12 @@ export default function PipelineLab() {
       .finally(() => setComponentsLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   function handleGeneratorChange(generatorId: string) {
     const gen = generators.find((g) => componentSelectId(g) === generatorId);
     setConfig((c) => ({
@@ -135,15 +151,24 @@ export default function PipelineLab() {
 
   async function handleRun() {
     if (!query.trim() || loading) return;
-    setHasQueried(true);
+    const id = Date.now();
+    const currentQuery = query.trim();
+    setQuery('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+    setMessages((prev) => [
+      ...prev,
+      { id, query: currentQuery, result: null, error: null },
+    ]);
     setLoading(true);
-    setError(null);
-    setResult(null);
-    setExpandedChunks(new Set());
-    setActivePanel(null);
     try {
+      const history = messages
+        .filter((m) => m.result?.answer)
+        .map((m) => ({ query: m.query, answer: m.result!.answer }));
+
       const req: RunRequest = {
-        query: query.trim(),
+        query: currentQuery,
         collection: config.collection,
         retriever: config.retriever,
         reranker: config.reranker,
@@ -151,26 +176,38 @@ export default function PipelineLab() {
         generator_params: config.generatorParams,
         top_k_retrieve: config.topKRetrieve,
         top_k_rerank: config.topKRerank,
+        history,
       };
-      setResult(await runPipeline(req));
+      const result = await runPipeline(req);
+      setMessages((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, result } : m)),
+      );
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
+      const error = e instanceof Error ? e.message : 'Unknown error';
+      setMessages((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, error } : m)),
+      );
     } finally {
       setLoading(false);
     }
   }
 
-  function toggleChunk(i: number) {
+  function toggleChunk(msgId: number, i: number) {
     setExpandedChunks((prev) => {
-      const next = new Set(prev);
-      next.has(i) ? next.delete(i) : next.add(i);
-      return next;
+      const set = new Set(prev[msgId] ?? []);
+      set.has(i) ? set.delete(i) : set.add(i);
+      return { ...prev, [msgId]: set };
     });
   }
 
   const selectedGenerator = generators.find(
     (g) => componentSelectId(g) === config.generator,
   );
+
+  const hasQueried = messages.length > 0;
+  const activePanelMessage = activePanel
+    ? messages.find((m) => m.id === activePanel.id)
+    : null;
 
   return (
     <>
@@ -224,13 +261,13 @@ export default function PipelineLab() {
               const value =
                 config.generatorParams[p.name] ??
                 (p.default as string | number) ??
-                "";
+                '';
               const onChange = (v: string | number) =>
                 setConfig((c) => ({
                   ...c,
                   generatorParams: { ...c.generatorParams, [p.name]: v },
                 }));
-              if (p.type === "int") {
+              if (p.type === 'int') {
                 return (
                   <NumberField
                     key={p.name}
@@ -240,7 +277,7 @@ export default function PipelineLab() {
                   />
                 );
               }
-              if (p.type === "float") {
+              if (p.type === 'float') {
                 return (
                   <NumberField
                     key={p.name}
@@ -265,148 +302,240 @@ export default function PipelineLab() {
 
       {/* ── Main area ──────────────────────────────────────────── */}
       <main className="bg-neutral-50 flex-1 min-w-0 flex flex-col overflow-hidden">
-        {hasQueried && (
-          <div className="flex-1 overflow-y-auto flex flex-col gap-5">
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
-                <span className="font-semibold">Error: </span>
-                {error}
-              </div>
-            )}
-
-            {result && (
-              <div className="flex h-full">
-                <div className="p-5 flex flex-col gap-3 flex-1 min-w-0 max-w-2xl mx-auto overflow-y-auto">
-                  <ChatExchange query={query} answer={result.answer} />
-                  <div className="flex gap-2">
-                    {[
-                      {
-                        id: "latency" as const,
-                        label: `${result.latency.total_ms} ms`,
-                        icon: <ChartBarIcon className="size-4" />,
-                      },
-                      {
-                        id: "chunks" as const,
-                        label: `Context`,
-                        icon: <DocumentTextIcon className="size-4" />,
-                      },
-                    ].map(({ id, label, icon }) => (
-                      <button
-                        key={id}
-                        onClick={() =>
-                          setActivePanel((prev) => (prev === id ? null : id))
-                        }
-                        className={`flex gap-1 items-center p-1 text-xs font-medium transition-colors hover:cursor-pointer ${
-                          activePanel === id
-                            ? "bg-salmon text-white border-salmon"
-                            : "text-neutral-600 hover:bg-neutral-200/50 hover:text-neutral-800"
-                        }`}
-                      >
-                        {icon}
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {activePanel && (
-                  <div className="w-1/2 bg-white shrink-0 flex flex-col overflow-y-auto">
-                    {activePanel === "latency" && (
-                      <div className="flex flex-col gap-5 p-5">
-                        <PanelHeader
-                          title="Latency"
-                          hint="Time spent in each pipeline stage: retrieval, reranking, and generation."
-                        />
-                        <div>
-                          <LatencyBar latency={result.latency} />
-                        </div>
-                      </div>
-                    )}
-                    {activePanel === "chunks" && (
-                      <div>
-                        <div className="flex flex-col gap-5 p-5">
-                          <PanelHeader
-                            title="Context"
-                            hint="Documents returned by the retriever and optionally reranked. Chunks passed to the LLM as context are marked."
-                          />
-                          <div className="flex flex-col">
-                            {result.chunks.map((chunk, i) => (
-                              <ChunkCard
-                                key={i}
-                                index={i}
-                                chunk={chunk}
-                                expanded={expandedChunks.has(i)}
-                                onToggle={() => toggleChunk(i)}
-                              />
-                            ))}
+        {!hasQueried ? (
+          <div className="flex flex-col items-center justify-center p-4 h-full gap-6">
+            <Image
+              src={'/images/chat_large.svg'}
+              height={120}
+              width={180}
+              alt="Ask a question"
+            />
+            <p className="font-bold text-xl">Playground</p>
+            <div className="w-full max-w-2xl mx-auto ring-1 ring-neutral-300 bg-white flex items-center gap-2 p-2 pl-4">
+              <textarea
+                ref={textareaRef}
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = e.target.scrollHeight + 'px';
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey))
+                    handleRun();
+                }}
+                placeholder="Ask a question"
+                spellCheck={false}
+                rows={1}
+                style={{ maxHeight: '8rem' }}
+                className="flex-1 text-sm resize-none overflow-y-hidden focus:outline-none transition-all placeholder:text-neutral-500"
+              />
+              <button
+                onClick={handleRun}
+                disabled={loading || !query.trim()}
+                className="shrink-0 w-9 h-9 flex items-center justify-center bg-salmon text-white hover:bg-salmon-500 active:bg-salmon-700 disabled:bg-neutral-200 disabled:cursor-not-allowed transition-all"
+              >
+                {loading ? <Spinner /> : <ArrowUpIcon className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 overflow-hidden flex min-h-0">
+            {/* Chat column: messages + query bar */}
+            <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+              <div
+                ref={scrollRef}
+                className="flex-1 overflow-y-auto p-5 flex flex-col gap-8 min-w-0"
+              >
+                <div className="flex flex-col gap-8 max-w-2xl mx-auto w-full">
+                  {messages.map((msg, idx) => (
+                    <div key={msg.id} className="flex flex-col gap-3">
+                      {msg.error ? (
+                        <>
+                          <ChatExchange query={msg.query} answer="" />
+                          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
+                            <span className="font-semibold">Error: </span>
+                            {msg.error}
                           </div>
+                        </>
+                      ) : (
+                        <ChatExchange
+                          query={msg.query}
+                          answer={msg.result?.answer ?? ''}
+                          retrieval_query={msg.result?.retrieval_query}
+                          loading={
+                            loading &&
+                            idx === messages.length - 1 &&
+                            !msg.result
+                          }
+                        />
+                      )}
+                      {msg.result && (
+                        <div className="flex gap-2">
+                          {[
+                            {
+                              id: 'latency' as const,
+                              label: `${msg.result.latency.total_ms} ms`,
+                              icon: <ChartBarIcon className="size-4" />,
+                            },
+                            {
+                              id: 'context' as const,
+                              label: 'Context',
+                              icon: <DocumentTextIcon className="size-4" />,
+                            },
+                          ].map(({ id, label, icon }) => (
+                            <button
+                              key={id}
+                              onClick={() =>
+                                setActivePanel((prev) =>
+                                  prev?.id === msg.id && prev.panel === id
+                                    ? null
+                                    : { id: msg.id, panel: id },
+                                )
+                              }
+                              className={`flex gap-1 items-center p-1 text-xs font-medium transition-colors hover:cursor-pointer ${
+                                activePanel?.id === msg.id &&
+                                activePanel.panel === id
+                                  ? 'bg-salmon text-white'
+                                  : 'text-neutral-600 hover:bg-neutral-200/50 hover:text-neutral-800'
+                              }`}
+                            >
+                              {icon}
+                              {label}
+                            </button>
+                          ))}
                         </div>
-                        <div className="flex flex-col gap-5 p-5">
-                          <PanelHeader
-                            title="Semantic Space"
-                            hint="2-D projection of chunk embeddings. Chunks kept as context are highlighted; the query is shown as a distinct point."
-                          />
-                          <SemanticScatterplot
-                            chunks={result.chunks}
-                            contextChunks={result.context_chunks}
-                            queryX={result.query_x}
-                            queryY={result.query_y}
-                          />
-                        </div>
-                      </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Query bar — stays under the chat column */}
+              <div className="p-4">
+                <div className="w-full max-w-2xl mx-auto ring-1 ring-neutral-300 bg-white flex items-center gap-2 p-2 pl-4">
+                  <textarea
+                    ref={textareaRef}
+                    value={query}
+                    onChange={(e) => {
+                      setQuery(e.target.value);
+                      e.target.style.height = 'auto';
+                      e.target.style.height = e.target.scrollHeight + 'px';
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey))
+                        handleRun();
+                    }}
+                    placeholder="Ask a question"
+                    spellCheck={false}
+                    rows={1}
+                    style={{ maxHeight: '8rem' }}
+                    className="flex-1 text-sm resize-none overflow-y-hidden focus:outline-none transition-all placeholder:text-neutral-500"
+                  />
+                  <button
+                    onClick={handleRun}
+                    disabled={loading || !query.trim()}
+                    className="shrink-0 w-9 h-9 flex items-center justify-center bg-salmon text-white hover:bg-salmon-500 active:bg-salmon-700 disabled:bg-neutral-200 disabled:cursor-not-allowed transition-all"
+                  >
+                    {loading ? (
+                      <Spinner />
+                    ) : (
+                      <ArrowUpIcon className="w-5 h-5" />
                     )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Right detail panel */}
+            {activePanel && activePanelMessage?.result && (
+              <div className="w-1/2 max-w-lg bg-white shrink-0 flex flex-col overflow-y-auto border-l border-neutral-200">
+                {activePanel.panel === 'latency' && (
+                  <div>
+                    <div className="sticky top-0 bg-white z-20 px-5 py-3 border-b border-neutral-200 text-lg font-bold flex items-center justify-between">
+                      Latency
+                      <button
+                        onClick={() => setActivePanel(null)}
+                        className="text-neutral-400 hover:text-neutral-700 transition-colors p-2 hover:bg-neutral-100 hover:cursor-pointer"
+                      >
+                        <XMarkIcon className="size-5" />
+                      </button>
+                    </div>
+                    <div className="flex flex-col gap-5 p-5">
+                      <PanelHeader
+                        title="Latency"
+                        hint="Time spent in each pipeline stage: retrieval, reranking, and generation."
+                      />
+                      <LatencyBar latency={activePanelMessage.result.latency} />
+                    </div>
+                  </div>
+                )}
+                {activePanel.panel === 'context' && (
+                  <div>
+                    <div className="sticky top-0 bg-white z-20 px-5 py-3 border-b border-neutral-200 text-lg font-bold flex items-center justify-between">
+                      Context
+                      <button
+                        onClick={() => setActivePanel(null)}
+                        className="text-neutral-400 hover:text-neutral-700 transition-colors p-2 hover:bg-neutral-100 hover:cursor-pointer"
+                      >
+                        <XMarkIcon className="size-5" />
+                      </button>
+                    </div>
+                    <div className="flex flex-col gap-5 p-5">
+                      <div className="bg-neutral-100 p-3 gap-3 flex flex-col text-xs text-neutral-500">
+                        <p>
+                          <span className="font-medium mr-2 text-black">
+                            Question:
+                          </span>
+                          {activePanelMessage.query}
+                        </p>
+                        {activePanelMessage.result.retrieval_query && (
+                          <p>
+                            <span className="font-medium mr-2 text-black">
+                              Contextualized:
+                            </span>
+                            {activePanelMessage.result.retrieval_query}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-5 p-5">
+                      <PanelHeader
+                        title="Retrieved Chunks"
+                        hint="Documents returned by the retriever and optionally reranked. Chunks passed to the LLM as context are marked."
+                      />
+                      <div className="flex flex-col">
+                        {activePanelMessage.result.chunks.map((chunk, i) => (
+                          <ChunkCard
+                            key={i}
+                            index={i}
+                            chunk={chunk}
+                            expanded={
+                              expandedChunks[activePanel.id]?.has(i) ?? false
+                            }
+                            onToggle={() => toggleChunk(activePanel.id, i)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-5 p-5">
+                      <PanelHeader
+                        title="Semantic Space"
+                        hint="2-D projection of chunk embeddings. Chunks kept as context are highlighted; the query is shown as a distinct point."
+                      />
+                      <SemanticScatterplot
+                        chunks={activePanelMessage.result.chunks}
+                        contextChunks={activePanelMessage.result.context_chunks}
+                        queryX={activePanelMessage.result.query_x}
+                        queryY={activePanelMessage.result.query_y}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
             )}
           </div>
         )}
-
-        <div
-          className={
-            !hasQueried
-              ? "flex flex-col items-center justify-center p-4 h-full gap-6"
-              : "p-4"
-          }
-        >
-          {!hasQueried && (
-            <>
-              <Image
-                src={"/images/chat_large.svg"}
-                height={120}
-                width={180}
-                alt="Ask a question"
-              />
-              <p className="font-bold text-xl">Playground</p>
-            </>
-          )}
-          <div className="w-full max-w-2xl mx-auto ring-1 ring-neutral-300 bg-white flex items-center gap-2 p-2 pl-4">
-            <textarea
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                e.target.style.height = "auto";
-                e.target.style.height = e.target.scrollHeight + "px";
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleRun();
-              }}
-              placeholder="Ask a question"
-              spellCheck={false}
-              rows={1}
-              style={{ maxHeight: "8rem" }}
-              className="flex-1 text-sm resize-none overflow-y-hidden focus:outline-none transition-all placeholder:text-neutral-500"
-            />
-
-            <button
-              onClick={handleRun}
-              disabled={loading || !query.trim()}
-              className="shrink-0 w-9 h-9 flex items-center justify-center bg-salmon text-white hover:bg-salmon-500 active:bg-salmon-700 disabled:bg-neutral-200 disabled:cursor-not-allowed transition-all"
-            >
-              {loading ? <Spinner /> : <ArrowUpIcon className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
       </main>
     </>
   );

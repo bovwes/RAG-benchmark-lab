@@ -1,6 +1,11 @@
 export type RetrieverType = string;
 export type RerankerType = string;
 
+export interface HistoryMessage {
+  query: string;
+  answer: string;
+}
+
 export interface RunRequest {
   query: string;
   collection: string;
@@ -10,6 +15,7 @@ export interface RunRequest {
   generator_params: Record<string, string | number>;
   top_k_retrieve: number;
   top_k_rerank: number;
+  history: HistoryMessage[];
 }
 
 export interface Chunk {
@@ -36,6 +42,7 @@ export interface RunResult {
   pipeline_name: string;
   query_x: number;
   query_y: number;
+  retrieval_query: string;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';

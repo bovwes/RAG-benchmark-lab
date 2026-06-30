@@ -34,4 +34,9 @@ class BaseGenerator(ABC):
     def build(cls, **resources) -> "BaseGenerator": ...
 
     @abstractmethod
-    def generate(self, query: str, chunks: list[RetrievedChunk]) -> str: ...
+    def generate(self, query: str, chunks: list[RetrievedChunk], history: list[dict] | None = None) -> str: ...
+
+    def rewrite_query(self, query: str, _: list[dict]) -> str:
+        """Rewrite a follow-up query into a standalone question using conversation history.
+        Default: return query unchanged (subclasses override to use LLM)."""
+        return query
