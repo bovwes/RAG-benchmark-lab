@@ -1,15 +1,5 @@
-from typing import Protocol, runtime_checkable
-
-from backend.core.types import RetrievedChunk
+from ..base import BaseGenerator
 
 from .openai import OpenAIGenerator
-
-
-@runtime_checkable
-class BaseGenerator(Protocol):
-    name: str
-
-    def generate(self, query: str, chunks: list[RetrievedChunk]) -> str: ...
-
 
 __all__ = ["BaseGenerator", "OpenAIGenerator"]

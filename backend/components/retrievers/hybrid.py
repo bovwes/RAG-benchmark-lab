@@ -1,9 +1,12 @@
+from backend.components.base import BaseRetriever
 from backend.core.types import RetrievedChunk
 from .chroma import ChromaRetriever
 from .bm25 import BM25Retriever
 
 
-class HybridRetriever:
+class HybridRetriever(BaseRetriever):
+    """Default Hybrid Retriever"""
+
     name = "hybrid"
 
     def __init__(self, dense: ChromaRetriever, sparse: BM25Retriever, k_rrf: int = 60):

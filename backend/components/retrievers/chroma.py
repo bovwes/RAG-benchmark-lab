@@ -1,7 +1,10 @@
+from backend.components.base import BaseRetriever
 from backend.core.types import RetrievedChunk
 
 
-class ChromaRetriever:
+class ChromaRetriever(BaseRetriever):
+    """Default Chroma Retriever"""
+
     name = "chroma"
 
     def __init__(self, collection, embed_model):

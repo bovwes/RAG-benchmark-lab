@@ -1,9 +1,12 @@
 from sentence_transformers import CrossEncoder
 
+from backend.components.base import BaseReranker
 from backend.core.types import RetrievedChunk
 
 
-class CrossEncoderReranker:
+class CrossEncoderReranker(BaseReranker):
+    """Default CrossEncoder Reranker"""
+
     name = "cross-encoder"
 
     def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"):

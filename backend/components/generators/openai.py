@@ -1,3 +1,4 @@
+from backend.components.base import BaseGenerator
 from backend.core.types import RetrievedChunk
 
 _DEFAULT_PROMPT = (
@@ -9,7 +10,9 @@ _DEFAULT_PROMPT = (
 )
 
 
-class OpenAIGenerator:
+class OpenAIGenerator(BaseGenerator):
+    """Default OpenAI Generator. Work with any OpenAI SDK-enabled model"""
+    
     name = "openai"
 
     def __init__(

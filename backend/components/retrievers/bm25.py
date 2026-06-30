@@ -1,7 +1,10 @@
+from backend.components.base import BaseRetriever
 from backend.core.types import RetrievedChunk
 
 
-class BM25Retriever:
+class BM25Retriever(BaseRetriever):
+    """Default BM25 Retriever"""
+
     name = "bm25"
 
     def __init__(self, collection):

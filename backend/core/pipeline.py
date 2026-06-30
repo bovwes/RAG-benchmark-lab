@@ -3,13 +3,14 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from .types import RetrievedChunk
+from backend.components.base import BaseRetriever, BaseReranker, BaseGenerator
 
 
 @dataclass
 class PipelineConfig:
-    retriever: object
-    generator: object
-    reranker: Optional[object] = None
+    retriever: BaseRetriever
+    generator: BaseGenerator
+    reranker: Optional[BaseReranker] = None
     top_k_retrieve: int = 10
     top_k_rerank: int = 5
     name: str = ""
