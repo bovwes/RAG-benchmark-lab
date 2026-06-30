@@ -3,9 +3,6 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { getComponents, type ComponentCategory } from '@/lib/api';
-import ComponentCard from '@/components/ComponentCard';
-import ViewToggle from '@/components/ViewToggle';
-import { useView } from '@/context/ViewContext';
 import {
   DataTable,
   DataTableHead,
@@ -35,7 +32,6 @@ export default function ComponentsPage() {
   const [categories, setCategories] = useState<ComponentCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { view, setView } = useView();
 
   useEffect(() => {
     getComponents()
@@ -59,7 +55,6 @@ export default function ComponentsPage() {
     <div className="flex-1 flex flex-col min-h-0">
       <div className="flex h-14 shrink-0 px-3 items-center justify-between border-b border-neutral-200">
         <p className="text-base font-bold">Components</p>
-        <ViewToggle view={view} onChange={setView} />
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
@@ -75,38 +70,7 @@ export default function ComponentsPage() {
           <p className="text-sm text-neutral-400 p-4">No components found.</p>
         )}
 
-        {!loading && !error && totalComponents > 0 && view === 'tile' && (
-          <div className="flex flex-col gap-6">
-            {categories.map((cat) => (
-              <div key={cat.category} className="flex flex-col">
-                <div className="flex items-center gap-2 pb-4">
-                  <p className="text-neutral-500">
-                    {categoryLabel(cat.category)}
-                  </p>
-                </div>
-
-                {cat.components.length === 0 ? (
-                  <p className="text-xs text-neutral-400 py-2">
-                    No components found in this category.
-                  </p>
-                ) : (
-                  <div className="columns-1 xl:columns-2 gap-3">
-                    {cat.components.map((component) => (
-                      <div key={component.name} className="mb-3 break-inside-avoid">
-                        <ComponentCard
-                          component={component}
-                          category={cat.category}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {!loading && !error && totalComponents > 0 && view === 'table' && (
+        {!loading && !error && totalComponents > 0 && (
           <DataTable>
             <DataTableHead>
               <DataTableHeader className="pr-4">Name</DataTableHeader>

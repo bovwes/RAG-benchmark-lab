@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { JetBrains_Mono } from 'next/font/google';
 import NavSidebar from '@/components/NavSidebar';
-import { ViewProvider } from '@/context/ViewContext';
 import './globals.css';
 
 const JetBrainsMono = JetBrains_Mono({
@@ -27,11 +26,9 @@ export default function RootLayout({
       <body className="h-full flex flex-col">
         <div className="flex flex-1 min-h-0">
           <NavSidebar />
-          <ViewProvider>
-            <div className="flex flex-1 min-h-0 min-w-0 overflow-x-auto">
-              {children}
-            </div>
-          </ViewProvider>
+          <div className="flex flex-1 min-h-0 min-w-0 overflow-x-auto">
+            {children}
+          </div>
         </div>
       </body>
     </html>

@@ -4,9 +4,6 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { listEvaluationFiles, type EvalFileMeta } from '@/lib/api';
 import Spinner from '@/components/Spinner';
-import TileCard from '@/components/TileCard';
-import ViewToggle from '@/components/ViewToggle';
-import { useView } from '@/context/ViewContext';
 import Link from 'next/link';
 import {
   DataTable,
@@ -21,7 +18,6 @@ export default function EvaluationPage() {
   const [files, setFiles] = useState<EvalFileMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { view, setView } = useView();
 
   useEffect(() => {
     listEvaluationFiles()
@@ -34,15 +30,10 @@ export default function EvaluationPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const icon = (
-    <Image src="images/star.svg" alt="Evaluation" width={32} height={32} />
-  );
-
   return (
     <div className="flex-1 flex flex-col min-h-0">
       <div className="flex h-14 shrink-0 px-3 items-center justify-between border-b border-neutral-200">
         <p className="text-base font-bold">Evaluation sets</p>
-        <ViewToggle view={view} onChange={setView} />
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
@@ -65,21 +56,7 @@ export default function EvaluationPage() {
           </p>
         )}
 
-        {!loading && !error && files.length > 0 && view === 'tile' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {files.map((f) => (
-              <TileCard
-                key={f.filename}
-                href={`/evaluation/${encodeURIComponent(f.filename)}`}
-                icon={icon}
-                title={f.filename.replace(/\.json$/, '')}
-                subtitle={`${f.question_count} ${f.question_count === 1 ? 'question' : 'questions'}`}
-              />
-            ))}
-          </div>
-        )}
-
-        {!loading && !error && files.length > 0 && view === 'table' && (
+        {!loading && !error && files.length > 0 && (
           <DataTable>
             <DataTableHead>
               <DataTableHeader className="pr-4">File</DataTableHeader>
