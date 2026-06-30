@@ -1,5 +1,5 @@
-import type { Chunk } from '@/lib/api';
-import ScoreBadge from './ScoreBadge';
+import type { Chunk } from "@/lib/api";
+import ScoreBadge from "./ScoreBadge";
 
 export default function ChunkCard({
   index,
@@ -13,44 +13,32 @@ export default function ChunkCard({
   onToggle: () => void;
 }) {
   return (
-    <div
-      className={`overflow-hidden transition-all border ${
-        expanded
-          ? 'bg-white ring-1'
-          : 'bg-white border-neutral-300 hover:ring-1 hover:cursor-pointer'
-      }`}
-    >
+    <div className={`overflow-hidden transition-all ${expanded ? "" : ""}`}>
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between text-left hover:bg-zinc-50/50 transition-colors h-14"
+        className="w-full flex items-center justify-between text-left transition-colors p-2 hover:bg-neutral-100 hover:cursor-pointer"
       >
-        <div className="flex items-center w-full">
-          <div className="w-14 h-14 shrink-0 flex items-center justify-center border-r border-neutral-300 font-bold text-lg">
+        <div className="flex gap-4 items-center w-full">
+          <div className="shrink-0 text-sm flex items-center justify-center font-bold">
             {index + 1}
           </div>
-          <div className="h-14 flex flex-col justify-between w-full">
-            <div className="h-8 px-3 flex justify-between items-center gap-2">
-              {chunk.source && (
-                <p className="text-sm truncate">{chunk.source}</p>
-              )}
-              <ScoreBadge score={chunk.score} />
-            </div>
-            <div className="bg-neutral-100 items-center w-full px-3 h-6">
-              <p>
+          <div className="flex flex-col justify-between w-full">
+            <div className="flex justify-between items-center gap-2">
+              <div className="flex gap-1 text-xs ">
+                {chunk.source && <p className="truncate">{chunk.source}</p>}
                 {chunk.page > 0 && (
-                  <span className="text-xs text-neutral-500">
-                    p. {chunk.page}
-                  </span>
+                  <span className="text-neutral-500">p. {chunk.page}</span>
                 )}
-              </p>
+              </div>
+              <ScoreBadge score={chunk.score} />
             </div>
           </div>
         </div>
       </button>
 
       {expanded && (
-        <div className="border-t border-neutral-300 p-3">
-          <p className="text-xs leading-relaxed whitespace-pre-wrap font-mono">
+        <div className="pl-8 p-2">
+          <p className="text-xs leading-relaxed whitespace-pre-wrap text-neutral-500">
             {chunk.text}
           </p>
         </div>

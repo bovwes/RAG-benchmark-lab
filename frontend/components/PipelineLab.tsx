@@ -10,7 +10,7 @@ import {
   type ComponentCategory,
   type ComponentInfo,
 } from "@/lib/api";
-import Card from "./Card";
+import PanelHeader from "./PanelHeader";
 import ConfigSection from "./ConfigSection";
 import NumberField from "./NumberField";
 import TextField from "./TextField";
@@ -20,7 +20,12 @@ import LatencyBar from "./LatencyBar";
 import ChunkCard from "./ChunkCard";
 import SemanticScatterplot from "./SemanticScatterplot";
 import Spinner from "./Spinner";
-import { ArrowUpIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowUpIcon,
+  ArrowUpRightIcon,
+  ChartBarIcon,
+  DocumentTextIcon,
+} from "@heroicons/react/16/solid";
 import ChatExchange from "./ChatExchange";
 import Image from "next/image";
 
@@ -65,6 +70,9 @@ export default function PipelineLab() {
   const [collections, setCollections] = useState<string[]>(["documents"]);
   const [expandedChunks, setExpandedChunks] = useState<Set<number>>(new Set());
   const [hasQueried, setHasQueried] = useState(false);
+  const [activePanel, setActivePanel] = useState<"latency" | "chunks" | null>(
+    null,
+  );
   const [componentCategories, setComponentCategories] = useState<
     ComponentCategory[]
   >([]);
@@ -132,6 +140,7 @@ export default function PipelineLab() {
     setError(null);
     setResult(null);
     setExpandedChunks(new Set());
+    setActivePanel(null);
     try {
       const req: RunRequest = {
         query: query.trim(),
@@ -257,7 +266,7 @@ export default function PipelineLab() {
       {/* ── Main area ──────────────────────────────────────────── */}
       <main className="bg-neutral-50 flex-1 min-w-0 flex flex-col overflow-hidden">
         {hasQueried && (
-          <div className="flex-1 overflow-y-auto flex flex-col gap-5 p-5">
+          <div className="flex-1 overflow-y-auto flex flex-col gap-5">
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
                 <span className="font-semibold">Error: </span>
@@ -266,46 +275,88 @@ export default function PipelineLab() {
             )}
 
             {result && (
-              <div className="grid grid-cols-1 2xl:grid-cols-2 gap-5">
-                <ChatExchange query={query} answer={result.answer} />
-                <div className="flex flex-col gap-5">
-                  <Card
-                    title="Latency"
-                    hint="Time spent in each pipeline stage: retrieval, reranking, and generation."
-                  >
-                    <LatencyBar latency={result.latency} />
-                  </Card>
-                  <div className="grid grid-cols-1 3xl:grid-cols-2 gap-5">
-                    <Card
-                      title="Semantic Space"
-                      hint="2-D projection of chunk embeddings. Chunks kept as context are highlighted; the query is shown as a distinct point."
-                    >
-                      <SemanticScatterplot
-                        chunks={result.chunks}
-                        contextChunks={result.context_chunks}
-                        queryX={result.query_x}
-                        queryY={result.query_y}
-                      />
-                    </Card>
-
-                    <Card
-                      title="Retrieved Chunks"
-                      hint="Documents returned by the retriever and optionally reranked. Chunks passed to the LLM as context are marked."
-                    >
-                      <div className="flex flex-col gap-2">
-                        {result.chunks.map((chunk, i) => (
-                          <ChunkCard
-                            key={i}
-                            index={i}
-                            chunk={chunk}
-                            expanded={expandedChunks.has(i)}
-                            onToggle={() => toggleChunk(i)}
-                          />
-                        ))}
-                      </div>
-                    </Card>
+              <div className="flex h-full">
+                <div className="p-5 flex flex-col gap-3 flex-1 min-w-0 max-w-2xl mx-auto overflow-y-auto">
+                  <ChatExchange query={query} answer={result.answer} />
+                  <div className="flex gap-2">
+                    {[
+                      {
+                        id: "latency" as const,
+                        label: `${result.latency.total_ms} ms`,
+                        icon: <ChartBarIcon className="size-4" />,
+                      },
+                      {
+                        id: "chunks" as const,
+                        label: `Context`,
+                        icon: <DocumentTextIcon className="size-4" />,
+                      },
+                    ].map(({ id, label, icon }) => (
+                      <button
+                        key={id}
+                        onClick={() =>
+                          setActivePanel((prev) => (prev === id ? null : id))
+                        }
+                        className={`flex gap-1 items-center p-1 text-xs font-medium transition-colors hover:cursor-pointer ${
+                          activePanel === id
+                            ? "bg-salmon text-white border-salmon"
+                            : "text-neutral-600 hover:bg-neutral-200/50 hover:text-neutral-800"
+                        }`}
+                      >
+                        {icon}
+                        {label}
+                      </button>
+                    ))}
                   </div>
                 </div>
+
+                {activePanel && (
+                  <div className="w-1/2 bg-white shrink-0 flex flex-col overflow-y-auto">
+                    {activePanel === "latency" && (
+                      <div className="flex flex-col gap-5 p-5">
+                        <PanelHeader
+                          title="Latency"
+                          hint="Time spent in each pipeline stage: retrieval, reranking, and generation."
+                        />
+                        <div>
+                          <LatencyBar latency={result.latency} />
+                        </div>
+                      </div>
+                    )}
+                    {activePanel === "chunks" && (
+                      <div>
+                        <div className="flex flex-col gap-5 p-5">
+                          <PanelHeader
+                            title="Context"
+                            hint="Documents returned by the retriever and optionally reranked. Chunks passed to the LLM as context are marked."
+                          />
+                          <div className="flex flex-col">
+                            {result.chunks.map((chunk, i) => (
+                              <ChunkCard
+                                key={i}
+                                index={i}
+                                chunk={chunk}
+                                expanded={expandedChunks.has(i)}
+                                onToggle={() => toggleChunk(i)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-5 p-5">
+                          <PanelHeader
+                            title="Semantic Space"
+                            hint="2-D projection of chunk embeddings. Chunks kept as context are highlighted; the query is shown as a distinct point."
+                          />
+                          <SemanticScatterplot
+                            chunks={result.chunks}
+                            contextChunks={result.context_chunks}
+                            queryX={result.query_x}
+                            queryY={result.query_y}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

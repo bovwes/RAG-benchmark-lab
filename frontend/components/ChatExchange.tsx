@@ -1,7 +1,7 @@
-import Image from 'next/image';
-import ReactMarkdown from 'react-markdown';
+import Image from "next/image";
+import ReactMarkdown from "react-markdown";
 
-const mdComponents: React.ComponentProps<typeof ReactMarkdown>['components'] = {
+const mdComponents: React.ComponentProps<typeof ReactMarkdown>["components"] = {
   p: ({ children }) => (
     <p className="mb-3 last:mb-0 leading-relaxed">{children}</p>
   ),
@@ -23,11 +23,11 @@ const mdComponents: React.ComponentProps<typeof ReactMarkdown>['components'] = {
   li: ({ children }) => <li className="leading-relaxed">{children}</li>,
   code: ({ children, className }) =>
     className ? (
-      <code className="block bg-neutral-100 rounded px-3 py-2 text-xs font-mono overflow-x-auto mb-3">
+      <code className="block bg-neutral-200/50 rounded px-3 py-2 text-xs font-mono overflow-x-auto mb-3">
         {children}
       </code>
     ) : (
-      <code className="bg-neutral-100 rounded px-1 py-0.5 text-xs font-mono">
+      <code className="bg-neutral-200/50  rounded px-1 py-0.5 text-xs font-mono">
         {children}
       </code>
     ),
@@ -50,7 +50,7 @@ interface ChatExchangeProps {
 export default function ChatExchange({ query, answer }: ChatExchangeProps) {
   return (
     <div className="text-sm leading-relaxed gap-2 flex flex-col w-full">
-      <div className="p-4 w-full flex justify-end">
+      <div className="w-full flex justify-end">
         <div className="max-w-sm text-wrap">
           <div className="flex items-center gap-3 mb-2 w-fit ml-auto">
             <Image
@@ -64,7 +64,7 @@ export default function ChatExchange({ query, answer }: ChatExchangeProps) {
           <p className="bg-neutral-200/50 py-2 px-3 text-wrap">{query}</p>
         </div>
       </div>
-      <div className="p-4 w-full">
+      <div className="w-full">
         <div className="flex items-center gap-3 w-fit mb-2">
           <Image
             src="/images/agent.svg"
