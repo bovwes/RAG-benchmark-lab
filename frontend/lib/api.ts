@@ -401,6 +401,8 @@ export interface JudgeMetric {
 
 export interface JudgeConfig {
   metrics: JudgeMetric[];
+  max_tokens: number;
+  temperature: number;
 }
 
 export async function getJudgeConfig(): Promise<JudgeConfig> {

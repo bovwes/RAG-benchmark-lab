@@ -189,6 +189,8 @@ class JudgeMetricConfig(BaseModel):
 
 class JudgeConfig(BaseModel):
     metrics: list[JudgeMetricConfig]
+    max_tokens: int = 5
+    temperature: float = 0.0
 
 
 class BenchmarkResponse(BaseModel):
@@ -654,7 +656,7 @@ def _build_llm_judge(cfg: JudgeConfig) -> Optional[rb.LLMJudge]:
     if not cfg.metrics:
         return None
     metrics = [rb.JudgeMetric(name=m.name, prompt_template=m.prompt) for m in cfg.metrics]
-    return rb.LLMJudge(_llm_client, _llm_model, metrics)
+    return rb.LLMJudge(_llm_client, _llm_model, metrics, max_tokens=cfg.max_tokens, temperature=cfg.temperature)
 
 
 @app.get("/api/judge-config", response_model=JudgeConfig)
