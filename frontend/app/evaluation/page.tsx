@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import { listEvaluationFiles, type EvalFileMeta } from '@/lib/api';
-import Spinner from '@/components/Spinner';
-import Link from 'next/link';
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { listEvaluationFiles, type EvalFileMeta } from "@/lib/api";
+import Spinner from "@/components/Spinner";
+import Link from "next/link";
 import {
   DataTable,
   DataTableHead,
@@ -12,7 +12,7 @@ import {
   DataTableBody,
   DataTableRow,
   DataTableCell,
-} from '@/components/DataTable';
+} from "@/components/DataTable";
 
 export default function EvaluationPage() {
   const [files, setFiles] = useState<EvalFileMeta[]>([]);
@@ -24,7 +24,7 @@ export default function EvaluationPage() {
       .then(setFiles)
       .catch((e) =>
         setError(
-          e instanceof Error ? e.message : 'Failed to load evaluation files',
+          e instanceof Error ? e.message : "Failed to load evaluation files",
         ),
       )
       .finally(() => setLoading(false));
@@ -48,10 +48,10 @@ export default function EvaluationPage() {
 
         {!loading && !error && files.length === 0 && (
           <p className="text-sm text-neutral-400">
-            No evaluation files found. Add a .json file to the{' '}
+            No evaluation files found. Add a .json file to the{" "}
             <code className="text-xs bg-neutral-100 px-1 py-0.5">
               evaluation/
-            </code>{' '}
+            </code>{" "}
             folder.
           </p>
         )}
@@ -67,7 +67,7 @@ export default function EvaluationPage() {
                 <DataTableRow key={f.filename}>
                   <DataTableCell className="pr-4 flex items-center gap-3">
                     <Image
-                      src="images/star.svg"
+                      src="images/eval_file.svg"
                       alt=""
                       width={24}
                       height={24}
@@ -77,7 +77,7 @@ export default function EvaluationPage() {
                       href={`/evaluation/${encodeURIComponent(f.filename)}`}
                       className="font-medium underline underline-offset-4"
                     >
-                      {f.filename.replace(/\.json$/, '')}{' '}
+                      {f.filename.replace(/\.json$/, "")}{" "}
                     </Link>
                   </DataTableCell>
                   <DataTableCell className="text-neutral-500 tabular-nums">

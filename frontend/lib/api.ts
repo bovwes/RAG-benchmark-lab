@@ -239,7 +239,7 @@ export interface QuestionResult {
   generated_answer: string;
   retrieval: { recall_at_k: number; precision_at_k: number; mrr: number };
   answer: { token_f1: number; rouge_l: number; exact_match: number };
-  judge: { faithfulness: number; relevance: number };
+  judge: Record<string, number>;
   latency_ms: {
     retrieve: number;
     rerank: number;
@@ -392,4 +392,32 @@ export async function loadBenchmarkFile(
   );
   if (!res.ok) throw new Error('Could not load benchmark file');
   return res.json() as Promise<SavedBenchmark>;
+}
+
+export interface JudgeMetric {
+  name: string;
+  prompt: string;
+}
+
+export interface JudgeConfig {
+  metrics: JudgeMetric[];
+}
+
+export async function getJudgeConfig(): Promise<JudgeConfig> {
+  const res = await fetch(`${API_URL}/api/judge-config`);
+  if (!res.ok) throw new Error('Could not load judge config');
+  return res.json() as Promise<JudgeConfig>;
+}
+
+export async function saveJudgeConfig(cfg: JudgeConfig): Promise<JudgeConfig> {
+  const res = await fetch(`${API_URL}/api/judge-config`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(cfg),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error((err as { detail?: string }).detail ?? 'Save failed');
+  }
+  return res.json() as Promise<JudgeConfig>;
 }

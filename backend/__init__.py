@@ -6,6 +6,7 @@ from .components.registry import discover_components, resolve_components
 from .metrics import (
     RetrievalMetrics,
     AnswerMetrics,
+    JudgeMetric,
     JudgeMetrics,
     compute_retrieval_metrics,
     compute_answer_metrics,
@@ -41,6 +42,7 @@ __all__ = [
     # metrics
     "RetrievalMetrics",
     "AnswerMetrics",
+    "JudgeMetric",
     "JudgeMetrics",
     "compute_retrieval_metrics",
     "compute_answer_metrics",

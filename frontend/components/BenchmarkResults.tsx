@@ -11,14 +11,16 @@ import BenchmarkLegend from './BenchmarkLegend';
 
 const COLOR_PALETTE = ['#264653', '#2A9D8F', '#E9C46A', '#F4A261', '#E76F51'];
 
-const METRICS: {
+type MetricDef = {
   key: string;
   label: string;
   subtitle: string;
   judge?: boolean;
   domainMin?: number;
   domainMax?: number;
-}[] = [
+};
+
+const STATIC_METRICS: MetricDef[] = [
   {
     key: 'recall_at_k',
     label: 'Recall@K',
@@ -61,23 +63,13 @@ const METRICS: {
     domainMin: 0,
     domainMax: 1,
   },
-  {
-    key: 'faithfulness',
-    label: 'Faithfulness',
-    subtitle: 'LLM Judge-assigned answer faithfulness score (1-5)',
-    judge: true,
-    domainMin: 1,
-    domainMax: 5,
-  },
-  {
-    key: 'relevance',
-    label: 'Relevance',
-    subtitle: 'LLM Judge-assigned answer relevance score (1-5)',
-    judge: true,
-    domainMin: 1,
-    domainMax: 5,
-  },
 ];
+
+const NON_JUDGE_KEYS = new Set([
+  'recall_at_k', 'precision_at_k', 'mrr',
+  'token_f1', 'rouge_l', 'exact_match',
+  'retrieve_ms', 'rerank_ms', 'generate_ms', 'total_ms',
+]);
 
 interface Props {
   results: BenchmarkConfigResult[];
@@ -86,6 +78,21 @@ interface Props {
 }
 
 export default function BenchmarkResults({ results, judge, configs }: Props) {
+  const judgeMetrics: MetricDef[] = judge && results[0]
+    ? Object.keys(results[0].metrics)
+        .filter((k) => !NON_JUDGE_KEYS.has(k))
+        .map((k) => ({
+          key: k,
+          label: k.charAt(0).toUpperCase() + k.slice(1).replace(/_/g, ' '),
+          subtitle: `LLM Judge score for ${k} (1-5)`,
+          judge: true,
+          domainMin: 1,
+          domainMax: 5,
+        }))
+    : [];
+
+  const METRICS = [...STATIC_METRICS, ...judgeMetrics];
+
   const [visible, setVisible] = useState<Set<string>>(
     () => new Set(results.map((r) => r.config)),
   );

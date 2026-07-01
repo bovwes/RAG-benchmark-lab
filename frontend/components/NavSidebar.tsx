@@ -6,14 +6,9 @@ import Image from "next/image";
 
 const navGroups = [
   {
-    label: "Context",
+    label: "Database",
     items: [
       { href: "/collections", label: "Collections", Icon: "images/files.svg" },
-      {
-        href: "/evaluation",
-        label: "Evaluation sets",
-        Icon: "images/star.svg",
-      },
     ],
   },
   {
@@ -24,6 +19,21 @@ const navGroups = [
         href: "/playground",
         label: "Playground",
         Icon: "images/chat.svg",
+      },
+    ],
+  },
+  {
+    label: "Evaluation",
+    items: [
+      {
+        href: "/evaluation",
+        label: "Evaluation sets",
+        Icon: "images/star.svg",
+      },
+      {
+        href: "/judge",
+        label: "LLM Judge",
+        Icon: "images/judge.svg",
       },
       { href: "/benchmark", label: "Benchmarks", Icon: "images/diamond.svg" },
     ],
@@ -55,7 +65,7 @@ export default function NavSidebar() {
                 <Link
                   key={href}
                   href={href}
-                  className={`flex items-center gap-3 py-1 px-3 text-sm underline-offset-4 ${
+                  className={`flex items-center gap-3 py-1 px-3 text-sm font-medium underline-offset-4 ${
                     active ? "" : "hover:underline"
                   }`}
                   style={

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { ArrowLeftIcon } from '@heroicons/react/16/solid';
-import { browseDirs, getDefaultBrowsePath } from '@/lib/api';
-import Image from 'next/image';
+import { useEffect, useState } from "react";
+import { ArrowLeftIcon } from "@heroicons/react/16/solid";
+import { browseDirs, getDefaultBrowsePath } from "@/lib/api";
+import Image from "next/image";
 
 interface FolderPickerProps {
   initialPath?: string;
@@ -14,7 +14,7 @@ interface FolderPickerProps {
 function basename(p: string): string {
   return (
     p
-      .replace(/[\\/]+$/, '')
+      .replace(/[\\/]+$/, "")
       .split(/[\\/]/)
       .pop() || p
   );
@@ -25,7 +25,7 @@ export default function FolderPicker({
   onSelect,
   onClose,
 }: FolderPickerProps) {
-  const [path, setPath] = useState('');
+  const [path, setPath] = useState("");
   const [parent, setParent] = useState<string | null>(null);
   const [dirs, setDirs] = useState<string[]>([]);
   const [files, setFiles] = useState<string[]>([]);
@@ -69,15 +69,15 @@ export default function FolderPicker({
             <button
               type="button"
               onClick={() =>
-                parent !== null ? navigate(parent) : navigate('')
+                parent !== null ? navigate(parent) : navigate("")
               }
-              disabled={parent === null && path === ''}
+              disabled={parent === null && path === ""}
               className="text-sm p-2.5 hover:text-neutral-800 hover:bg-neutral-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors hover:cursor-pointer"
             >
               <ArrowLeftIcon className="size-4" />
             </button>
             <div className="text-sm truncate bg-neutral-200/50 p-2 w-full">
-              {path || 'Select a drive'}
+              {path || "Select a drive"}
             </div>
           </div>
         </div>
@@ -101,7 +101,7 @@ export default function FolderPicker({
                   className="w-full text-left px-4 py-2 text-sm hover:bg-neutral-100 flex items-center gap-2 transition-all hover:cursor-pointer"
                 >
                   <Image
-                    src="/images/folder.svg"
+                    src="/images/folder_closed.svg"
                     height={24}
                     width={24}
                     alt="Folder"
@@ -115,7 +115,7 @@ export default function FolderPicker({
                   className="w-full px-4 py-2 text-sm flex items-center gap-2 text-neutral-500"
                 >
                   <Image
-                    src="/images/file.svg"
+                    src="/images/document.svg"
                     height={24}
                     width={24}
                     alt="File"

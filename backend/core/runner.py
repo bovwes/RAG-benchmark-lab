@@ -4,7 +4,6 @@ from typing import Optional
 from .pipeline import PipelineConfig, PipelineResult, RAGPipeline
 from ..metrics.retrieval import RetrievalMetrics, compute_retrieval_metrics
 from ..metrics.answer import AnswerMetrics, compute_answer_metrics
-from ..metrics.judge import JudgeMetrics
 
 
 @dataclass
@@ -13,7 +12,7 @@ class ItemResult:
     pipeline_result: PipelineResult
     retrieval_metrics: object = field(default_factory=object)
     answer_metrics: object = field(default_factory=object)
-    judge_metrics: object = field(default_factory=object)
+    judge_metrics: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -35,21 +34,35 @@ class BenchmarkResult:
         return sum(values) / len(values) if values else 0.0
 
     def summary(self) -> dict[str, float]:
-        keys = [
+        static_keys = [
             ("recall_at_k",      "retrieval_metrics.recall_at_k"),
             ("precision_at_k",   "retrieval_metrics.precision_at_k"),
             ("mrr",              "retrieval_metrics.mrr"),
             ("token_f1",         "answer_metrics.token_f1"),
             ("rouge_l",          "answer_metrics.rouge_l"),
             ("exact_match",      "answer_metrics.exact_match"),
-            ("faithfulness",     "judge_metrics.faithfulness"),
-            ("relevance",        "judge_metrics.relevance"),
             ("retrieve_ms",      "pipeline_result.retrieve_latency_ms"),
             ("rerank_ms",        "pipeline_result.rerank_latency_ms"),
             ("generate_ms",      "pipeline_result.generate_latency_ms"),
             ("total_ms",         "pipeline_result.total_latency_ms"),
         ]
-        return {label: self.mean(path) for label, path in keys}
+        result = {label: self.mean(path) for label, path in static_keys}
+
+        # Collect judge metric keys dynamically from item results
+        judge_keys: set[str] = set()
+        for ir in self.item_results:
+            if isinstance(ir.judge_metrics, dict):
+                judge_keys.update(ir.judge_metrics.keys())
+
+        for key in sorted(judge_keys):
+            values = [
+                ir.judge_metrics[key]
+                for ir in self.item_results
+                if isinstance(ir.judge_metrics, dict) and key in ir.judge_metrics
+            ]
+            result[key] = sum(values) / len(values) if values else 0.0
+
+        return result
 
 
 class BenchmarkRunner:
@@ -58,11 +71,11 @@ class BenchmarkRunner:
         self.judge = judge
 
     def run(self, configs: list[PipelineConfig]) -> list[BenchmarkResult]:
-        
+
         results = []
 
         print("Starting benchmark")
-        
+
         for cfg in configs:
             print(f"\nRunning configuration: {cfg.name}")
 
@@ -89,12 +102,12 @@ class BenchmarkRunner:
                     judge_metrics=(
                         self.judge.score(item.question, pr.answer, pr.chunks)
                         if self.judge
-                        else JudgeMetrics()
+                        else {}
                     ),
                 ))
- 
+
             print(f"  Finished.")
-            
+
             results.append(BenchmarkResult(config_name=cfg.name, item_results=item_results))
 
         return results

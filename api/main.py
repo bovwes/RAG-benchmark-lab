@@ -33,6 +33,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
 VECTOR_DB_DIR = os.path.join(PROJECT_ROOT, "chroma_db")
 BENCHMARKS_DIR = os.path.join(PROJECT_ROOT, "benchmarks")
 EVALUATION_DIR = os.path.join(PROJECT_ROOT, "evaluation")
+JUDGE_CONFIG_PATH = os.path.join(PROJECT_ROOT, "judge_config.json")
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 
 app = FastAPI(title="RAG Benchmark Lab API")
@@ -179,6 +180,15 @@ class BenchmarkRequest(BaseModel):
     collection: str = "documents"
     judge: bool = False
     configs: list[BenchConfigSpec]
+
+
+class JudgeMetricConfig(BaseModel):
+    name: str
+    prompt: str
+
+
+class JudgeConfig(BaseModel):
+    metrics: list[JudgeMetricConfig]
 
 
 class BenchmarkResponse(BaseModel):
@@ -435,7 +445,7 @@ def run_benchmark(req: BenchmarkRequest):
     except Exception:
         raise HTTPException(status_code=404, detail=f"Collection '{req.collection}' not found")
 
-    judge = rb.LLMJudge(_llm_client, _llm_model) if req.judge else None
+    judge = _build_llm_judge(_load_judge_config()) if req.judge else None
 
     resources = dict(collection=collection, embed_model=_embed_model,
                      llm_client=_llm_client, llm_model=_llm_model)
@@ -516,7 +526,7 @@ async def run_benchmark_stream(req: BenchmarkRequest):
     except Exception:
         raise HTTPException(status_code=404, detail=f"Collection '{req.collection}' not found")
 
-    judge = rb.LLMJudge(_llm_client, _llm_model) if req.judge else None
+    judge = _build_llm_judge(_load_judge_config()) if req.judge else None
 
     resources = dict(collection=collection, embed_model=_embed_model,
                      llm_client=_llm_client, llm_model=_llm_model)
@@ -630,6 +640,35 @@ def get_evaluation_file(filename: str):
     if not path.is_file():
         raise HTTPException(status_code=404, detail="Evaluation file not found")
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _load_judge_config() -> JudgeConfig:
+    try:
+        data = json.loads(Path(JUDGE_CONFIG_PATH).read_text(encoding="utf-8"))
+        return JudgeConfig(**data)
+    except Exception:
+        return JudgeConfig(metrics=[])
+
+
+def _build_llm_judge(cfg: JudgeConfig) -> Optional[rb.LLMJudge]:
+    if not cfg.metrics:
+        return None
+    metrics = [rb.JudgeMetric(name=m.name, prompt_template=m.prompt) for m in cfg.metrics]
+    return rb.LLMJudge(_llm_client, _llm_model, metrics)
+
+
+@app.get("/api/judge-config", response_model=JudgeConfig)
+def get_judge_config():
+    return _load_judge_config()
+
+
+@app.put("/api/judge-config", response_model=JudgeConfig)
+def save_judge_config(cfg: JudgeConfig):
+    Path(JUDGE_CONFIG_PATH).write_text(
+        json.dumps(cfg.model_dump(), indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    return cfg
 
 
 @app.get("/api/browse-dirs")

@@ -5,6 +5,13 @@ from backend.core.types import RetrievedChunk
 
 
 @dataclass
+class JudgeMetric:
+    name: str
+    prompt_template: str
+
+
+# Kept for backwards compatibility with existing saved benchmarks
+@dataclass
 class JudgeMetrics:
     faithfulness: float = 0.0
     relevance: float = 0.0
@@ -12,23 +19,10 @@ class JudgeMetrics:
 
 class LLMJudge:
 
-    _FAITHFULNESS = (
-        "Score the faithfulness of the answer given the context (1-5).\n"
-        "1 = hallucinated, 5 = fully grounded.\n"
-        "Reply with ONLY a single integer.\n\n"
-        "Context:\n{context}\n\nQuestion: {question}\nAnswer: {answer}\n\nScore:"
-    )
-
-    _RELEVANCE = (
-        "Score how well the answer addresses the question (1-5).\n"
-        "1 = irrelevant, 5 = perfect.\n"
-        "Reply with ONLY a single integer.\n\n"
-        "Question: {question}\nAnswer: {answer}\n\nScore:"
-    )
-
-    def __init__(self, client, model: str):
+    def __init__(self, client, model: str, metrics: list[JudgeMetric]):
         self.client = client
         self.model = model
+        self.metrics = metrics
 
     def _query_llm_judge(self, prompt: str) -> float:
         try:
@@ -39,18 +33,16 @@ class LLMJudge:
                 messages=[{"role": "user", "content": prompt}],
             )
             text = response.choices[0].message.content.strip()
-
-            score_match = re.search(r"[1-5]", text) # extract the score from the output
-
+            score_match = re.search(r"[1-5]", text)
             return float(score_match.group()) if score_match else 0.0
-        
         except Exception:
             return 0.0
 
-    def score(self, question: str, answer: str, chunks: list[RetrievedChunk]) -> JudgeMetrics:
+    def score(self, question: str, answer: str, chunks: list[RetrievedChunk]) -> dict[str, float]:
         context = "\n\n".join(c.text for c in chunks)
-
-        return JudgeMetrics(
-            faithfulness = self._query_llm_judge(self._FAITHFULNESS.format(context=context, question=question, answer=answer)),
-            relevance = self._query_llm_judge(self._RELEVANCE.format(question=question, answer=answer))
-        )
+        return {
+            metric.name: self._query_llm_judge(
+                metric.prompt_template.format(context=context, question=question, answer=answer)
+            )
+            for metric in self.metrics
+        }

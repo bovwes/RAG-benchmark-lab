@@ -82,14 +82,14 @@ export default function BenchmarkListPage() {
         )}
 
         {!loading && files.length === 0 && (
-          <div className="flex flex-col items-center justify-center gap-8 h-full text-center">
+          <div className="flex items-center justify-center gap-4 h-full">
             <Image
-              src={"/images/diamond_large.svg"}
-              height={120}
-              width={180}
+              src={"/images/diamond.svg"}
+              height={52}
+              width={52}
               alt="Start a benchmark"
             />
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col">
               <p className="font-bold text-xl">Benchmarks</p>
               <p className="text-sm">No saved benchmarks yet</p>
             </div>
@@ -126,7 +126,7 @@ export default function BenchmarkListPage() {
                 <DataTableRow key={f.filename}>
                   <DataTableCell className="pr-4 flex gap-3 items-center">
                     <Image
-                      src="images/diamond.svg"
+                      src="images/benchmark_file.svg"
                       alt=""
                       width={24}
                       height={24}

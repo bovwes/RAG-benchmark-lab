@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeftIcon,
   ArrowPathIcon,
   ArrowUpRightIcon,
-} from '@heroicons/react/16/solid';
-import { FolderOpenIcon } from '@heroicons/react/16/solid';
+} from "@heroicons/react/16/solid";
+import { FolderOpenIcon } from "@heroicons/react/16/solid";
 import {
   ingestFolder,
   chunkPreview,
@@ -18,55 +18,55 @@ import {
   type ChunkPreviewChunk,
   type ChunkStrategy,
   DEFAULT_SEPARATORS,
-} from '@/lib/api';
-import FolderPicker from '@/components/FolderPicker';
-import ErrorBanner from '@/components/ErrorBanner';
-import NumberField from '@/components/NumberField';
-import Dropdown from '@/components/Dropdown';
-import MultiSelect from '@/components/MultiSelect';
-import Image from 'next/image';
+} from "@/lib/api";
+import FolderPicker from "@/components/FolderPicker";
+import ErrorBanner from "@/components/ErrorBanner";
+import NumberField from "@/components/NumberField";
+import Dropdown from "@/components/Dropdown";
+import MultiSelect from "@/components/MultiSelect";
+import Image from "next/image";
 
-const EXT_OPTIONS = ['.txt', '.md', '.pdf'];
+const EXT_OPTIONS = [".txt", ".md", ".pdf"];
 
 const SEPARATOR_OPTIONS = [
-  { value: '\n\n', label: 'Double return (↵↵)' },
-  { value: '\n', label: 'Return (↵)' },
-  { value: '. ', label: 'Period (. )' },
-  { value: ' ', label: 'Space (·)' },
+  { value: "\n\n", label: "Double return (↵↵)" },
+  { value: "\n", label: "Return (↵)" },
+  { value: ". ", label: "Period (. )" },
+  { value: " ", label: "Space (·)" },
 ];
 
 const CHUNK_COLORS = [
-  { bg: '#FAEDCB' },
-  { bg: '#C9E4DF' },
-  { bg: '#C5DEF2' },
-  { bg: '#DBCDF0' },
-  { bg: '#F2C6DF' },
-  { bg: '#F8D9C4' },
+  { bg: "#FAEDCB" },
+  { bg: "#C9E4DF" },
+  { bg: "#C5DEF2" },
+  { bg: "#DBCDF0" },
+  { bg: "#F2C6DF" },
+  { bg: "#F8D9C4" },
 ];
 
 function displaySep(s: string): string {
-  if (s === '') return '∅ empty';
-  return s.replace(/\n/g, '↵').replace(/\t/g, '→').replace(/ /g, '·');
+  if (s === "") return "∅ empty";
+  return s.replace(/\n/g, "↵").replace(/\t/g, "→").replace(/ /g, "·");
 }
 
 function parseSep(s: string): string {
-  return s.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
+  return s.replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\r/g, "\r");
 }
 
 export default function NewCollectionPage() {
   const router = useRouter();
 
-  const [folderPath, setFolderPath] = useState('');
-  const [collectionName, setCollectionName] = useState('');
+  const [folderPath, setFolderPath] = useState("");
+  const [collectionName, setCollectionName] = useState("");
   const [chunkSize, setChunkSize] = useState(512);
   const [chunkOverlap, setChunkOverlap] = useState(64);
   const [extensions, setExtensions] = useState<string[]>([
-    '.txt',
-    '.md',
-    '.pdf',
+    ".txt",
+    ".md",
+    ".pdf",
   ]);
   const [existingCollections, setExistingCollections] = useState<string[]>([]);
-  const [strategy, setStrategy] = useState<ChunkStrategy>('char');
+  const [strategy, setStrategy] = useState<ChunkStrategy>("char");
   const [separators, setSeparators] = useState<string[]>([
     ...DEFAULT_SEPARATORS,
   ]);
@@ -75,8 +75,8 @@ export default function NewCollectionPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [previewText, setPreviewText] = useState('');
-  const [sampleFilename, setSampleFilename] = useState('');
+  const [previewText, setPreviewText] = useState("");
+  const [sampleFilename, setSampleFilename] = useState("");
   const [previewChunks, setPreviewChunks] = useState<ChunkPreviewChunk[]>([]);
   const [previewStats, setPreviewStats] = useState<{
     total: number;
@@ -209,9 +209,9 @@ export default function NewCollectionPage() {
         separators,
         keep_separator: keepSeparator,
       });
-      router.push('/collections');
+      router.push("/collections");
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ingest failed');
+      setError(e instanceof Error ? e.message : "Ingest failed");
     } finally {
       setLoading(false);
     }
@@ -250,8 +250,8 @@ export default function NewCollectionPage() {
               {existingCollections.includes(collectionName.trim()) &&
                 collectionName.trim() && (
                   <ErrorBanner>
-                    A collection named{' '}
-                    <span className="underline">{collectionName.trim()}</span>{' '}
+                    A collection named{" "}
+                    <span className="underline">{collectionName.trim()}</span>{" "}
                     already exists and will be overwritten
                   </ErrorBanner>
                 )}
@@ -304,10 +304,10 @@ export default function NewCollectionPage() {
                 <Dropdown
                   value={strategy}
                   options={[
-                    { value: 'char' as ChunkStrategy, label: 'Character' },
+                    { value: "char" as ChunkStrategy, label: "Character" },
                     {
-                      value: 'recursive_char' as ChunkStrategy,
-                      label: 'Recursive character',
+                      value: "recursive_char" as ChunkStrategy,
+                      label: "Recursive character",
                     },
                   ]}
                   onChange={setStrategy}
@@ -333,7 +333,7 @@ export default function NewCollectionPage() {
                 </Link>
               </div>
             </div>
-            {strategy === 'recursive_char' && (
+            {strategy === "recursive_char" && (
               <>
                 <div className="flex items-center justify-between p-4">
                   <span className="text-neutral-500">Separators</span>
@@ -355,7 +355,7 @@ export default function NewCollectionPage() {
 
                 <div className="flex items-center justify-between p-4">
                   <span
-                    className={`${keepSeparator ? 'text-neutral-500' : 'text-neutral-300'}`}
+                    className={`${keepSeparator ? "text-neutral-500" : "text-neutral-300"}`}
                   >
                     Keep separator
                   </span>
@@ -365,10 +365,10 @@ export default function NewCollectionPage() {
                       role="switch"
                       aria-checked={keepSeparator}
                       onClick={() => setKeepSeparator((v) => !v)}
-                      className={`relative inline-flex h-7 w-13 shrink-0 items-center rounded-full transition-colors duration-200 hover:cursor-pointer focus:outline-none ${keepSeparator ? 'bg-salmon' : 'bg-neutral-200'}`}
+                      className={`relative inline-flex h-7 w-13 shrink-0 items-center rounded-full transition-colors duration-200 hover:cursor-pointer focus:outline-none ${keepSeparator ? "bg-salmon" : "bg-neutral-200"}`}
                     >
                       <span
-                        className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${keepSeparator ? 'translate-x-7' : 'translate-x-1'}`}
+                        className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${keepSeparator ? "translate-x-7" : "translate-x-1"}`}
                       />
                     </button>
                   </div>
@@ -391,8 +391,8 @@ export default function NewCollectionPage() {
               >
                 {loading && <Spinner />}
                 {loading
-                  ? 'Ingesting…'
-                  : `Ingest ${folderFileCount === null ? '' : `${folderFileCount} `}${folderFileCount === 1 ? 'file' : 'files'}`}
+                  ? "Ingesting…"
+                  : `Ingest ${folderFileCount === null ? "" : `${folderFileCount} `}${folderFileCount === 1 ? "file" : "files"}`}
               </button>
             </div>
           </aside>
@@ -411,7 +411,7 @@ export default function NewCollectionPage() {
                 value={previewText}
                 onChange={(e) => {
                   setPreviewText(e.target.value);
-                  setSampleFilename('');
+                  setSampleFilename("");
                 }}
                 spellCheck="false"
                 placeholder="Paste text here to preview chunking, or open a folder to load a sample"
@@ -425,12 +425,12 @@ export default function NewCollectionPage() {
                 {previewStats && (
                   <div className="font-normal flex items-center gap-3 text-xs text-neutral-500">
                     <div className="border border-neutral-300 flex divide-x divide-neutral-300 items-center">
-                      {' '}
-                      <div className="p-1.5"> AVG</div>{' '}
+                      {" "}
+                      <div className="p-1.5"> AVG</div>{" "}
                       <div className="p-1.5 text-neutral-800 bg-neutral-100">
                         {previewStats.avg.toFixed()}
                       </div>
-                    </div>{' '}
+                    </div>{" "}
                     <div className="border border-neutral-300 flex divide-x divide-neutral-300 items-center">
                       <div className="p-1.5"> MIN</div>
                       <div className="p-1.5 text-neutral-800 bg-neutral-100">
@@ -438,8 +438,8 @@ export default function NewCollectionPage() {
                       </div>
                     </div>
                     <div className="border border-neutral-300 flex divide-x divide-neutral-300 items-center">
-                      {' '}
-                      <div className="p-1.5"> MAX</div>{' '}
+                      {" "}
+                      <div className="p-1.5"> MAX</div>{" "}
                       <div className="p-1.5 text-neutral-800 bg-neutral-100">
                         {previewStats.max}
                       </div>
@@ -502,4 +502,4 @@ function Spinner() {
 }
 
 const inputCls =
-  'bg-transparent transition-all focus:outline-none ring-1 ring-transparent max-w-2/3 hover:ring-black focus:ring-black hover:bg-neutral-100 focus:bg-neutral-100 p-2 min-w-40 w-full text-left';
+  "bg-transparent transition-all focus:outline-none ring-1 ring-transparent max-w-2/3 hover:ring-black focus:ring-black hover:bg-neutral-100 focus:bg-neutral-100 p-2 min-w-40 w-full text-left";

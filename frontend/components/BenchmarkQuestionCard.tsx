@@ -1,5 +1,4 @@
 import type { QuestionResult } from '@/lib/api';
-import { CheckIcon } from '@heroicons/react/16/solid';
 import Image from 'next/image';
 
 export default function BenchmarkQuestionCard({
@@ -80,21 +79,18 @@ export default function BenchmarkQuestionCard({
               <Metric label="ROUGE-L" value={q.answer.rouge_l} />
               <Metric label="Exact Match" value={q.answer.exact_match} />
             </div>
-            {showJudge && (
+            {showJudge && Object.keys(q.judge).length > 0 && (
               <div className="flex flex-col gap-1 p-2 bg-neutral-100">
                 <p className="font-semibold mb-1">Judge scores</p>
-                <Metric
-                  label="Faithfulness"
-                  value={q.judge.faithfulness}
-                  decimals={1}
-                  suffix=" / 5"
-                />
-                <Metric
-                  label="Relevance"
-                  value={q.judge.relevance}
-                  decimals={1}
-                  suffix=" / 5"
-                />
+                {Object.entries(q.judge).map(([key, val]) => (
+                  <Metric
+                    key={key}
+                    label={key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')}
+                    value={val}
+                    decimals={1}
+                    suffix=" / 5"
+                  />
+                ))}
               </div>
             )}
             <div className="flex flex-col gap-1 p-2 bg-neutral-100">

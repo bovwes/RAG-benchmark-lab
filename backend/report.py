@@ -3,28 +3,37 @@ import json
 
 from .core.runner import BenchmarkResult
 
-_COLS = [
+_STATIC_COLS = [
     ("recall@k",    "recall_at_k"),
     ("prec@k",      "precision_at_k"),
     ("mrr",         "mrr"),
     ("tok-f1",      "token_f1"),
     ("rouge-l",     "rouge_l"),
     ("exact",       "exact_match"),
-    ("faithful",    "faithfulness"),
-    ("relevance",   "relevance"),
     ("ret_ms",      "retrieve_ms"),
     ("rerank_ms",   "rerank_ms"),
     ("gen_ms",      "generate_ms"),
     ("total_ms",    "total_ms"),
 ]
 
+_STATIC_KEYS = {k for _, k in _STATIC_COLS}
+
 
 def print_table(results: list[BenchmarkResult]) -> None:
+    # Collect any judge metric keys present across all results
+    extra_keys: list[str] = []
+    for r in results:
+        for key in r.summary():
+            if key not in _STATIC_KEYS and key not in extra_keys:
+                extra_keys.append(key)
+
+    all_cols = _STATIC_COLS + [(k, k) for k in extra_keys]
+
     col_w  = 11
     name_w = max((len(r.config_name) for r in results), default=10) + 2
 
-    headers = ["config"] + [label for label, _ in _COLS]
-    widths  = [name_w] + [col_w] * len(_COLS)
+    headers = ["config"] + [label for label, _ in all_cols]
+    widths  = [name_w] + [col_w] * len(all_cols)
     sep     = "-" * sum(widths)
 
     print(f"\n{'Benchmark Results':^{sum(widths)}}")
@@ -34,7 +43,7 @@ def print_table(results: list[BenchmarkResult]) -> None:
 
     for r in results:
         summary = r.summary()
-        vals = [r.config_name] + [f"{summary.get(key, 0.0):.3f}" for _, key in _COLS]
+        vals = [r.config_name] + [f"{summary.get(key, 0.0):.3f}" for _, key in all_cols]
         print("".join(str(v).ljust(w) for v, w in zip(vals, widths)))
 
     print(sep)
@@ -64,8 +73,8 @@ def to_dict(results: list[BenchmarkResult]) -> list[dict]:
                         "exact_match": round(ir.answer_metrics.exact_match, 4),
                     },
                     "judge": {
-                        "faithfulness":     round(ir.judge_metrics.faithfulness, 4),
-                        "relevance":        round(ir.judge_metrics.relevance, 4),
+                        key: round(val, 4)
+                        for key, val in (ir.judge_metrics.items() if isinstance(ir.judge_metrics, dict) else {})
                     },
                     "latency_ms": {
                         "retrieve":  round(ir.pipeline_result.retrieve_latency_ms, 2),

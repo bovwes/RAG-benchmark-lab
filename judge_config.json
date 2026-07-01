@@ -1,0 +1,12 @@
+{
+  "metrics": [
+    {
+      "name": "faithfulness",
+      "prompt": "Score the faithfulness of the answer given the context (1-5).\n1 = hallucinated, 5 = fully grounded.\nReply with ONLY a single integer.\n\nContext:\n{context}\n\nQuestion: {question}\nAnswer: {answer}\n\nScore:"
+    },
+    {
+      "name": "relevance",
+      "prompt": "Score how well the answer addresses the question (1-5).\n1 = irrelevant, 5 = perfect.\nReply with ONLY a single integer.\n\nQuestion: {question}\nAnswer: {answer}\n\nScore:"
+    }
+  ]
+}

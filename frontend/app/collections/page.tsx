@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import {
   DataTable,
   DataTableHead,
@@ -10,8 +10,8 @@ import {
   DataTableBody,
   DataTableRow,
   DataTableCell,
-} from '@/components/DataTable';
-import { getCollectionsDetail, type CollectionDetail } from '@/lib/api';
+} from "@/components/DataTable";
+import { getCollectionsDetail, type CollectionDetail } from "@/lib/api";
 
 export default function IngestPage() {
   const [collections, setCollections] = useState<CollectionDetail[]>([]);
@@ -24,7 +24,7 @@ export default function IngestPage() {
     try {
       setCollections(await getCollectionsDetail());
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load collections');
+      setError(e instanceof Error ? e.message : "Failed to load collections");
     } finally {
       setLoading(false);
     }
@@ -70,7 +70,7 @@ export default function IngestPage() {
                     <DataTableCell className="pr-4">
                       <div className="flex items-center gap-3 font-medium">
                         <Image
-                          src="images/files.svg"
+                          src="images/vector_file.svg"
                           alt=""
                           width={24}
                           height={24}
@@ -84,8 +84,8 @@ export default function IngestPage() {
                     </DataTableCell>
                     <DataTableCell className="text-neutral-500 text-xs">
                       {metaEntries.length > 0
-                        ? metaEntries.map(([k, v]) => `${k}=${v}`).join('  ·  ')
-                        : '—'}
+                        ? metaEntries.map(([k, v]) => `${k}=${v}`).join("  ·  ")
+                        : "—"}
                     </DataTableCell>
                   </DataTableRow>
                 );
